@@ -1,0 +1,164 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Compute/virtualMachineScaleSets"
+        },
+        {
+          "anyOf": [
+            {
+              "field": "Microsoft.Compute/virtualMachineScaleSets/osProfile.linuxConfiguration",
+              "exists": true
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachineScaleSets/storageProfile.osDisk.osType",
+              "like": "Linux*"
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]",
+      "details": {
+        "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+        "name": "falcon-sensor-install-linux",
+        "roleDefinitionIds": [
+          "/providers/microsoft.authorization/roleDefinitions/9980e02c-c2be-4d73-94e8-173b1dc7cf3c"
+        ],
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.Compute/virtualMachineScaleSets/extensions/type",
+              "equals": "CustomScript"
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachineScaleSets/extensions/publisher",
+              "equals": "Microsoft.Azure.Extensions"
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachineScaleSets/extensions/provisioningState",
+              "in": [
+                "Succeeded",
+                "Provisioning succeeded"
+              ]
+            }
+          ]
+        },
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "vmName": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "FALCON_CID": {
+                  "type": "securestring"
+                },
+                "FALCON_CLIENT_ID": {
+                  "type": "securestring"
+                },
+                "FALCON_CLIENT_SECRET": {
+                  "type": "securestring"
+                },
+                "FALCON_CLOUD": {
+                  "type": "securestring"
+                }
+              },
+              "resources": [
+                {
+                  "name": "[concat(parameters('vmName'), '/falcon-sensor-install-linux')]",
+                  "type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+                  "location": "[parameters('location')]",
+                  "apiVersion": "2019-07-01",
+                  "properties": {
+                    "publisher": "Microsoft.Azure.Extensions",
+                    "type": "CustomScript",
+                    "typeHandlerVersion": "2.0",
+                    "protectedSettings":{
+                      "fileUris": [
+                        "https://raw.githubusercontent.com/crowdstrike/falcon-scripts/main/bash/install/falcon-linux-install.sh"
+                      ],
+                      "commandToExecute": "[concat('export FALCON_CID=',parameters('FALCON_CID'),' && export FALCON_CLIENT_ID=',parameters('FALCON_CLIENT_ID'),' && export FALCON_CLIENT_SECRET=',parameters('FALCON_CLIENT_SECRET'),' && export FALCON_CLOUD=',parameters('FALCON_CLOUD'),' && /bin/bash falcon-linux-install.sh')]"
+                    }
+                  }
+                }
+              ]
+            },
+            "parameters": {
+              "vmName": {
+                "value": "[field('name')]"
+              },
+              "location": {
+                "value": "[field('location')]"
+              },
+              "FALCON_CID": {
+                "value": "[parameters('FALCON_CID')]"
+              },
+              "FALCON_CLIENT_ID": {
+                "value": "[parameters('FALCON_CLIENT_ID')]"
+              },
+              "FALCON_CLIENT_SECRET": {
+                "value": "[parameters('FALCON_CLIENT_SECRET')]"
+              },
+              "FALCON_CLOUD": {
+                "value": "[parameters('FALCON_CLOUD')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy."
+      },
+      "allowedValues": [
+        "DeployIfNotExists",
+        "Disabled"
+      ],
+      "defaultValue": "DeployIfNotExists"
+    },
+    "FALCON_CID": {
+      "type": "String",
+      "metadata": {
+        "displayName": "FALCON_CID",
+        "description": "Enter the parameter FALCON_CID to be passed into the script"
+      }
+    },
+    "FALCON_CLIENT_ID": {
+      "type": "String",
+      "metadata": {
+        "displayName": "FALCON_CLIENT_ID",
+        "description": "Enter the parameter FALCON_CLIENT_ID to be passed into the script"
+      }
+    },
+    "FALCON_CLIENT_SECRET": {
+      "type": "String",
+      "metadata": {
+        "displayName": "FALCON_CLIENT_SECRET",
+        "description": "Enter the parameter FALCON_CLIENT_SECRET to be passed into the script"
+      }
+    },
+    "FALCON_CLOUD": {
+      "type": "String",
+      "metadata": {
+        "displayName": "FALCON_CLOUD",
+        "description": "Enter the parameter FALCON_CLOUD to be passed into the script"
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+      "mode": "All",
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.Sql/servers"
+                        },
+                        {
+                              "field": "identity.type",
+                              "notContains": "SystemAssigned"
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "audit"
+            }
+      },
+      "parameters": {}
+}

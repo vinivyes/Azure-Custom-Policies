@@ -1,0 +1,33 @@
+{
+      "mode": "All",
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.KeyVault/vaults"
+                        },
+                        {
+                              "field": "Microsoft.KeyVault/vaults/enableSoftDelete",
+                              "notEquals": true
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "modify",
+                  "details": {
+                        "roleDefinitionIds": [
+                              "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+                        ],
+                        "operations": [
+                              {
+                                    "operation": "addOrReplace",
+                                    "field": "Microsoft.KeyVault/vaults/enableSoftDelete",
+                                    "value": true
+                              }
+                        ]
+                  }
+            }
+      },
+      "parameters": {}
+}

@@ -1,0 +1,86 @@
+{
+      "mode": "Indexed",
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.EventHub/namespaces"
+            },
+            {
+              "field": "Microsoft.EventHub/namespaces/sku.tier",
+              "in": [
+                "Standard",
+                "Premium"
+              ]
+            }
+          ]
+        },
+        "then": {
+          "effect": "[parameters('effect')]",
+          "details": {
+            "type": "Microsoft.EventHub/namespaces/networkRuleSets",
+            "existenceCondition": {
+              "anyOf": [
+                {
+                  "field": "Microsoft.EventHub/namespaces/networkRuleSets/publicNetworkAccess",
+                  "notEquals": "Enabled"
+                },
+                {
+                  "field": "Microsoft.EventHub/namespaces/networkRuleSets/default.defaultAction",
+                  "notEquals": "Allow"
+                }
+              ]
+            },
+            "deployment": {
+              "properties": {
+                "mode": "incremental",
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "namespace": {
+                      "type": "String"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.EventHub/Namespaces/NetworkRuleSets",
+                      "name": "[concat(parameters('namespace'),'/default')]",
+                      "apiVersion": "2021-06-01-preview",
+                      "properties": {
+                        "defaultAction": "Deny",
+                        "publicNetworkAccess": "Disabled"
+                      }
+                    }
+                  ]
+                },
+                "parameters": {
+                  "namespace": {
+                    "value": "[field('fullName')]"
+                  }
+                }
+              }
+            },
+            "roleDefinitionIds": [
+              "/providers/Microsoft.Authorization/roleDefinitions/f526a384-b230-433a-b45c-95f59c4a2dec",
+              "/providers/Microsoft.Authorization/roleDefinitions/41077137-e803-4205-871c-5a86e6a753b4"
+            ]
+          }
+        }
+      },
+      "parameters": {
+        "effect": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Effect",
+            "description": "Enable or disable the execution of the policy"
+          },
+          "allowedValues": [
+            "DeployIfNotExists",
+            "Disabled"
+          ],
+          "defaultValue": "DeployIfNotExists"
+        }
+      }
+    }

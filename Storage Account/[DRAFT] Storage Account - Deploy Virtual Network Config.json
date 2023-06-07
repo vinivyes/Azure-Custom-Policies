@@ -1,0 +1,121 @@
+{
+    "mode": "Indexed",
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "equals": "Microsoft.Storage/storageAccounts"
+      },
+      "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+          "type": "Microsoft.Storage/storageAccounts",
+          "name": "[field('fullName')]",
+          "existenceCondition": {
+            "allOf": [
+              {
+                "field": "Microsoft.Storage/storageAccounts/networkAcls.defaultAction",
+                "equals": "Deny"
+              },
+              {
+                "count": {
+                  "field": "Microsoft.Storage/storageAccounts/networkAcls.virtualNetworkRules[*]",
+                  "where": {
+                    "allOf": [
+                      {
+                        "field": "Microsoft.Storage/storageAccounts/networkAcls.virtualNetworkRules[*].id",
+                        "equals": "[parameters('virtualNetworkId')]"
+                      },
+                      {
+                        "field": "Microsoft.Storage/storageAccounts/networkAcls.virtualNetworkRules[*].action",
+                        "equals": "Allow"
+                      }
+                    ]
+                  }
+                },
+                "greater": 0
+              }
+            ]
+          },
+          "deployment": {
+            "properties": {
+              "mode": "incremental",
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {
+                  "resourceName": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "resourceSku": {
+                    "type": "object"
+                  },
+                  "propAccessTier": {
+                    "type": "string"
+                  },
+                  "virtualNetworkId": {
+                    "type": "string"
+                  }
+                },
+                "variables": {},
+                "resources": [
+                  {
+                    "type": "Microsoft.Storage/storageAccounts",
+                    "apiVersion": "2019-06-01",
+                    "name": "[parameters('resourceName')]",
+                    "location": "[parameters('location')]",
+                    "sku": "[parameters('resourceSku')]",
+                    "properties": {
+                      "accessTier": "[parameters('propAccessTier')]",
+                      "networkAcls": {
+                        "virtualNetworkRules": [
+                          {
+                            "id": "[parameters('virtualNetworkId')]",
+                            "action": "Allow"
+                          }
+                        ],
+                        "defaultAction": "Deny"
+                      }
+                    }
+                  }
+                ],
+                "outputs": {}
+              },
+              "parameters": {
+                "location": {
+                  "value": "[field('location')]"
+                },
+                "resourceName": {
+                  "value": "[field('fullName')]"
+                },
+                "resourceSku": {
+                  "value": "[field('Microsoft.Storage/storageAccounts/sku')]"
+                },
+                "propAccessTier": {
+                  "value": "[field('Microsoft.Storage/storageAccounts/accessTier')]"
+                },
+                "virtualNetworkId": {
+                  "value": "[parameters('virtualNetworkId')]"
+                }
+              }
+            }
+          },
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/17d1049b-9a84-46fb-8f53-869881c3d3ab"
+          ]
+        }
+      }
+    },
+    "parameters": {
+      "virtualNetworkId": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Virtual Network ID",
+          "description": "Specifies the Virtual Network to use to configure storage account firewall",
+          "strongType": "Microsoft.Network/virtualNetworks/subnets"
+        }
+      }
+    }
+  }

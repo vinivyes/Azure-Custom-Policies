@@ -1,0 +1,37 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"vmssName":{
+			"type": "string",
+			"defaultValue": "devvmss1"
+		}
+	},
+	"variables": {},
+	"resources": [
+		{
+			"name": "[concat(parameters('vmssName'), '/Microsoft.Powershell.DSC')]",
+			"type": "Microsoft.Compute/virtualMachineScaleSets/extensions",
+			"location": "[resourceGroup().location]",
+			"apiVersion": "2019-07-01",
+			"properties": {
+				"autoUpgradeMinorVersion": true,
+				"publisher": "Microsoft.Powershell",
+				"type": "DSC",
+				"typeHandlerVersion": 2.74,
+				"settings": {
+					"wmfVersion": "latest",
+					"configuration": {
+						"url": "https://evolveddeployscripts.blob.core.windows.net/extensions/setupVM_AzureAD_v12.zip",
+						"script": "setupVM_AzureAD_v12.ps1",
+						"function": "SetupVM"
+					},
+					"configurationArguments": {},
+					"privacy": {
+						"dataCollection": "disable"
+					}
+				}
+			}
+		}
+	]
+}

@@ -1,0 +1,24 @@
+{
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.ServiceBus/namespaces"
+          }
+        ]
+      },
+      "then": {
+        "effect": "auditIfNotExists",
+        "details": {
+          "type": "Microsoft.ServiceBus/namespaces/authorizationRules",
+                  "existenceCondition": {
+                      "field":"name",
+                      "notEquals":"RootManageSharedAccessKey"
+                  }
+        }
+      }
+    },
+    "parameters": {}
+  }

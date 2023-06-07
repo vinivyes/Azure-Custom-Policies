@@ -1,0 +1,35 @@
+{
+    "mode": "Indexed",
+    "policyRule": {
+        "if": {
+                "allOf": [
+                    {
+                        "field": "type",
+                        "equals": "Microsoft.ServiceBus/namespaces"
+                    },
+                    {
+                        "field": "Microsoft.ServiceBus/namespaces/sku.tier",
+                        "notEquals": "Premium"
+                    }
+                ]
+        },
+        "then": {
+        "effect": "[parameters('effect')]"
+        }
+    },    
+    "parameters": {
+        "effect": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Effect",
+                "description": "Enable or disable the execution of the policy"
+            },
+            "allowedValues": [
+                "Audit",
+                "Deny",
+                "Disabled"
+            ],
+            "defaultValue": "Audit"
+        }
+    }
+}

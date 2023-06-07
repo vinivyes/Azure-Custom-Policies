@@ -1,0 +1,58 @@
+{
+      "mode": "Indexed",
+      "parameters": {
+            "listOfAllowedLocations": {
+                  "type": "Array",
+                  "metadata": {
+                        "displayName": "Allowed locations",
+                        "description": "The list of locations that can be specified when deploying resources.",
+                        "strongType": "location"
+                  }
+            }
+      },
+      "policyRule": {
+            "if": {
+                  "anyOf": [
+                        {
+                              "allOf": [
+                                    {
+                                          "field": "location",
+                                          "notIn": "[parameters('listOfAllowedLocations')]"
+                                    },
+                                    {
+                                          "field": "location",
+                                          "notEquals": "global"
+                                    },
+                                    {
+                                          "field": "type",
+                                          "notEquals": "Microsoft.AzureActiveDirectory/b2cDirectories"
+                                    },
+                                    {
+                                          "field": "type",
+                                          "notEquals": "Microsoft.Resources/deployments"
+                                    },
+                                    {
+                                          "field": "type",
+                                          "notEquals": "Microsoft.KeyVault/vaults"
+                                    }
+                              ]
+                        },
+                        {
+                              "allOf": [
+                                    {
+                                          "field": "type",
+                                          "equals": "Microsoft.KeyVault/vaults"
+                                    },
+                                    {
+                                          "field": "location",
+                                          "notEquals": "southcentralus"
+                                    }
+                              ]
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "deny"
+            }
+      }
+}

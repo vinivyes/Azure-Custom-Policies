@@ -1,0 +1,27 @@
+{
+      "mode": "Indexed",
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.DataLakeStore/accounts"
+                        },
+                        {
+                              "field": "Microsoft.DataLakeStore/accounts/firewallState",
+                              "notEquals": "Enabled"
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "append",
+                  "details": [
+                        {
+                              "field": "Microsoft.DataLakeStore/accounts/firewallState",
+                              "value": "Enabled"
+                        }
+                  ]
+            }
+      },
+      "parameters": {}
+}

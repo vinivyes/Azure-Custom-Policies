@@ -1,0 +1,447 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts/blobServices"
+            },
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts/tableServices"
+            },
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts/queueServices"
+            },
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts/fileServices"
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "details": {
+        "type": "Microsoft.Insights/diagnosticSettings",
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "parameters": {
+              "StorageDelete": {
+                "value": "[parameters('StorageDelete')]"
+              },
+              "StorageRead": {
+                "value": "[parameters('StorageRead')]"
+              },
+              "StorageWrite": {
+                "value": "[parameters('StorageWrite')]"
+              },
+              "Transaction": {
+                "value": "[parameters('Transaction')]"
+              },
+              "authorizationRuleId": {
+                "value": "[parameters('authorizationRuleId')]"
+              },
+              "diagnosticsSettingNameToUse": {
+                "value": "[parameters('diagnosticsSettingNameToUse')]"
+              },
+              "eventHubs": {
+                "value": "[parameters('eventHubs')]"
+              },
+              "location": {
+                "value": "[field('location')]"
+              },
+              "resourceName": {
+                "value": "[field('fullName')]"
+              },
+              "resourceType": {
+                "value": "[field('type')]"
+              },
+              "servicesToDeploy": {
+                "value": "[parameters('servicesToDeploy')]"
+              }
+            },
+            "template": {
+              "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "outputs": {},
+              "parameters": {
+                "StorageDelete": {
+                  "type": "string"
+                },
+                "StorageRead": {
+                  "type": "string"
+                },
+                "StorageWrite": {
+                  "type": "string"
+                },
+                "Transaction": {
+                  "type": "string"
+                },
+                "authorizationRuleId": {
+                  "type": "string"
+                },
+                "diagnosticsSettingNameToUse": {
+                  "type": "string"
+                },
+                "eventHubs": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "resourceName": {
+                  "type": "string"
+                },
+                "resourceType": {
+                  "type": "string"
+                },
+                "servicesToDeploy": {
+                  "type": "array"
+                }
+              },
+              "resources": [
+                {
+                  "apiVersion": "2017-05-01-preview",
+                  "dependsOn": [],
+                  "condition": "[equals(toLower(parameters('resourceType')),toLower('Microsoft.Storage/storageAccounts/blobServices'))]",
+                  "location": "[parameters('location')]",
+                  "name": "[concat(parameters('resourceName'),'/', 'Microsoft.Insights/', parameters('diagnosticsSettingNameToUse'))]",
+                  "properties": {
+                    "eventHubAuthorizationRuleId": "[parameters('authorizationRuleId')]",
+                    "eventHubName": "[parameters('eventHubs')]",
+                    "logs": [
+                      {
+                        "category": "StorageRead",
+                        "enabled": "[parameters('StorageRead')]"
+                      },
+                      {
+                        "category": "StorageWrite",
+                        "enabled": "[parameters('StorageWrite')]"
+                      },
+                      {
+                        "category": "StorageDelete",
+                        "enabled": "[parameters('StorageDelete')]"
+                      }
+                    ],
+                    "metrics": [
+                      {
+                        "category": "Transaction",
+                        "enabled": "[parameters('Transaction')]",
+                        "retentionPolicy": {
+                          "days": 0,
+                          "enabled": false
+                        },
+                        "timeGrain": null
+                      }
+                    ]
+                  },
+                  "type": "Microsoft.Storage/storageAccounts/blobServices/providers/diagnosticSettings"
+                },
+                {
+                  "apiVersion": "2017-05-01-preview",
+                  "dependsOn": [],
+                  "condition": "[equals(toLower(parameters('resourceType')),toLower('Microsoft.Storage/storageAccounts/tableServices'))]",
+                  "location": "[parameters('location')]",
+                  "name": "[concat(parameters('resourceName'),'/', 'Microsoft.Insights/', parameters('diagnosticsSettingNameToUse'))]",
+                  "properties": {
+                    "eventHubAuthorizationRuleId": "[parameters('authorizationRuleId')]",
+                    "eventHubName": "[parameters('eventHubs')]",
+                    "logs": [
+                      {
+                        "category": "StorageRead",
+                        "enabled": "[parameters('StorageRead')]"
+                      },
+                      {
+                        "category": "StorageWrite",
+                        "enabled": "[parameters('StorageWrite')]"
+                      },
+                      {
+                        "category": "StorageDelete",
+                        "enabled": "[parameters('StorageDelete')]"
+                      }
+                    ],
+                    "metrics": [
+                      {
+                        "category": "Transaction",
+                        "enabled": "[parameters('Transaction')]",
+                        "retentionPolicy": {
+                          "days": 0,
+                          "enabled": false
+                        },
+                        "timeGrain": null
+                      }
+                    ]
+                  },
+                  "type": "Microsoft.Storage/storageAccounts/tableServices/providers/diagnosticSettings"
+                },
+                {
+                  "apiVersion": "2017-05-01-preview",
+                  "dependsOn": [],
+                  "condition": "[equals(toLower(parameters('resourceType')),toLower('Microsoft.Storage/storageAccounts/queueServices'))]",
+                  "location": "[parameters('location')]",
+                  "name": "[concat(parameters('resourceName'),'/', 'Microsoft.Insights/', parameters('diagnosticsSettingNameToUse'))]",
+                  "properties": {
+                    "eventHubAuthorizationRuleId": "[parameters('authorizationRuleId')]",
+                    "eventHubName": "[parameters('eventHubs')]",
+                    "logs": [
+                      {
+                        "category": "StorageRead",
+                        "enabled": "[parameters('StorageRead')]"
+                      },
+                      {
+                        "category": "StorageWrite",
+                        "enabled": "[parameters('StorageWrite')]"
+                      },
+                      {
+                        "category": "StorageDelete",
+                        "enabled": "[parameters('StorageDelete')]"
+                      }
+                    ],
+                    "metrics": [
+                      {
+                        "category": "Transaction",
+                        "enabled": "[parameters('Transaction')]",
+                        "retentionPolicy": {
+                          "days": 0,
+                          "enabled": false
+                        },
+                        "timeGrain": null
+                      }
+                    ]
+                  },
+                  "type": "Microsoft.Storage/storageAccounts/queueServices/providers/diagnosticSettings"
+                },
+                {
+                  "apiVersion": "2017-05-01-preview",
+                  "dependsOn": [],
+                  "condition": "[equals(toLower(parameters('resourceType')),toLower('Microsoft.Storage/storageAccounts/fileServices'))]",
+                  "location": "[parameters('location')]",
+                  "name": "[concat(parameters('resourceName'),'/', 'Microsoft.Insights/', parameters('diagnosticsSettingNameToUse'))]",
+                  "properties": {
+                    "eventHubAuthorizationRuleId": "[parameters('authorizationRuleId')]",
+                    "eventHubName": "[parameters('eventHubs')]",
+                    "logs": [
+                      {
+                        "category": "StorageRead",
+                        "enabled": "[parameters('StorageRead')]"
+                      },
+                      {
+                        "category": "StorageWrite",
+                        "enabled": "[parameters('StorageWrite')]"
+                      },
+                      {
+                        "category": "StorageDelete",
+                        "enabled": "[parameters('StorageDelete')]"
+                      }
+                    ],
+                    "metrics": [
+                      {
+                        "category": "Transaction",
+                        "enabled": "[parameters('Transaction')]",
+                        "retentionPolicy": {
+                          "days": 0,
+                          "enabled": false
+                        },
+                        "timeGrain": null
+                      }
+                    ]
+                  },
+                  "type": "Microsoft.Storage/storageAccounts/fileServices/providers/diagnosticSettings"
+                }
+              ],
+              "variables": {}
+            }
+          }
+        },
+        "existenceCondition": {
+          "allOf": [
+            {
+              "count": {
+                "field": "Microsoft.Insights/diagnosticSettings/logs[*]",
+                "where":{
+                  "anyOf":[
+                    {
+                      "allOf":[
+                        {
+                          "equals": "StorageRead",
+                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].category"
+                        },
+                        {
+                          "equals": true,
+                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled"
+                        },
+                        {
+                          "equals": true,
+                          "value": "[parameters('StorageRead')]"
+                        }
+                      ]
+                    },
+                    {
+                      "allOf":[
+                        {
+                          "equals": "StorageWrite",
+                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].category"
+                        },
+                        {
+                          "equals": true,
+                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled"
+                        },
+                        {
+                          "equals": true,
+                          "value": "[parameters('StorageWrite')]"
+                        }
+                      ]
+                    },
+                    {
+                      "allOf":[
+                        {
+                          "equals": "StorageDelete",
+                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].category"
+                        },
+                        {
+                          "equals": "[parameters('StorageDelete')]",
+                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled"
+                        },
+                        {
+                          "equals": true,
+                          "value": "[parameters('StorageDelete')]"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "equals": "[add(add(if(equals(toLower(string(parameters('StorageRead'))),'true'),1,0),if(equals(toLower(string(parameters('StorageWrite'))),'true'),1,0)),if(equals(toLower(string(parameters('StorageDelete'))),'true'),1,0))]"
+            },
+            {
+              "equals": "[parameters('eventHubs')]",
+              "field": "Microsoft.Insights/diagnosticSettings/eventHubName"
+            },
+            {
+              "field": "Microsoft.Insights/diagnosticSettings/eventHubAuthorizationRuleId",
+              "matchInsensitively": "[parameters('authorizationRuleId')]"
+            }
+          ]
+        },
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+          "/providers/Microsoft.Authorization/roleDefinitions/17d1049b-9a84-46fb-8f53-869881c3d3ab"
+        ]
+        
+      },
+      "effect": "[parameters('effect')]"
+    }
+  },
+  "parameters": {
+    "StorageDelete": {
+      "type": "String",
+      "metadata": {
+        "displayName": "StorageDelete - Enabled",
+        "description": "Whether to stream StorageDelete logs to the Log Analytics to Event Hub - True or False"
+      },
+      "allowedValues": [
+        "True",
+        "False"
+      ],
+      "defaultValue": "True"
+    },
+    "StorageRead": {
+      "type": "String",
+      "metadata": {
+        "displayName": "StorageRead - Enabled",
+        "description": "Whether to stream StorageRead logs to the Log Analytics to Event Hub - True or False"
+      },
+      "allowedValues": [
+        "True",
+        "False"
+      ],
+      "defaultValue": "True"
+    },
+    "StorageWrite": {
+      "type": "String",
+      "metadata": {
+        "displayName": "StorageWrite - Enabled",
+        "description": "Whether to stream StorageWrite logs to the Log Analytics to Event Hub - True or False"
+      },
+      "allowedValues": [
+        "True",
+        "False"
+      ],
+      "defaultValue": "True"
+    },
+    "Transaction": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Transaction - Enabled",
+        "description": "Whether to stream Transaction logs to the Log Analytics to Event Hub - True or False"
+      },
+      "allowedValues": [
+        "True",
+        "False"
+      ],
+      "defaultValue": "True"
+    },
+    "authorizationRuleId": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Event Hub policy name",
+        "description": "Specify the Event Hubs policy name the storage account should be connected to.",
+        "strongType": "Microsoft.EventHub/Namespaces/AuthorizationRules",
+        "assignPermissions": true
+      }
+    },
+    "diagnosticsSettingNameToUse": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Setting name",
+        "description": "Name of the diagnostic settings."
+      },
+      "defaultValue": "storageAccountsDiagnosticsLogsToEventHub"
+    },
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy"
+      },
+      "allowedValues": [
+        "DeployIfNotExists",
+        "Disabled"
+      ],
+      "defaultValue": "DeployIfNotExists"
+    },
+    "eventHubs": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Stream to Event Hubs namespace",
+        "description": "Specify the Event Hubs the storage account should be connected to.",
+        "assignPermissions": true
+      }
+    },
+    "servicesToDeploy": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Storage services to deploy",
+        "description": "List of Storage services to deploy"
+      },
+      "allowedValues": [
+        "blobServices",
+        "fileServices",
+        "tableServices",
+        "queueServices"
+      ],
+      "defaultValue": [
+        "blobServices",
+        "fileServices",
+        "tableServices",
+        "queueServices"
+      ]
+    }
+  }
+}

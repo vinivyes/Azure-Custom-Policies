@@ -1,0 +1,45 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+      "value": "[empty(field('tags'))]",
+      "equals": true
+    },
+    "then": {
+      "effect": "modify",
+      "details": {
+        "roleDefinitionIds": [
+          "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+        ],
+        "operations": [
+          {
+            "operation": "addOrReplace",
+            "field": "tags",
+            "value": "[parameters('tags')]"
+          }
+        ]
+      }
+    }
+  },
+  "parameters": {
+    "tags": {
+      "type": "Object",
+      "metadata": {
+        "displayName": "tags",
+        "description": null
+      },
+      "defaultValue": {
+        "ApplicationName": "",
+        "Cost_Center": "",
+        "DataClass": "",
+        "DR": "",
+        "Environment": "",
+        "Owner": "",
+        "ServiceClass": "",
+        "AutomationSchedule": "",
+        "Project-Code": "",
+        "Impact-Rating": ""
+      }
+    }
+  }
+}

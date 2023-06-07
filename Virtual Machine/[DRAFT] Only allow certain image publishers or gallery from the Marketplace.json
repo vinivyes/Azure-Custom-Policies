@@ -1,0 +1,58 @@
+{
+      "mode": "All",
+      "parameters": {
+            "listOfAllowedimagePublishers": {
+                  "type": "Array",
+                  "metadata": {
+                        "displayName": "Allowed image publishers",
+                        "description": "The list of publishers to audit against. Example: 'MicrosoftWindowsServer'"
+                  }
+            },
+            "listOfAllowedGalleries": {
+                  "type": "Array",
+                  "metadata": {
+                        "displayName": "Allowed Image Galleries",
+                        "description": "Example: '/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/<RG-Name>/providers/Microsoft.Compute/galleries/<GalleryName>/*'"
+                  }
+            }
+      },
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "in": [
+                                    "Microsoft.Compute/virtualMachines",
+                                    "Microsoft.Compute/VirtualMachineScaleSets"
+                              ]
+                        },
+                        {
+                              "not": {
+                                    "field": "Microsoft.Compute/imagePublisher",
+                                    "in": "[parameters('listOfAllowedimagePublishers')]"
+                              }
+                        },
+                        {
+                              "count": {
+                                    "value": "[parameters('listOfAllowedGalleries')]",
+                                    "name": "allowedGallery",
+                                    "where": {
+                                          "field": "Microsoft.Compute/imageId",
+                                          "like": "[current('allowedGallery')]"
+                                    }
+                              },
+                              "equals": 0
+                        },
+                        {
+                              "not": {
+                                    "field": "tags['orchestrator']",
+                                    "like": "Kubernetes:*"
+                              }
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "deny"
+            }
+      }
+}

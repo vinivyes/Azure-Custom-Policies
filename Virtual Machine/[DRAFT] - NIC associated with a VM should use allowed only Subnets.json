@@ -1,0 +1,61 @@
+{
+    "mode": "Indexed",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Network/networkInterfaces"
+          },
+          {
+            "count": {
+              "field": "Microsoft.Network/networkInterfaces/ipConfigurations[*]",
+              "where": {
+                "field": "Microsoft.Network/networkInterfaces/ipconfigurations[*].subnet.id",
+                "notIn": "[parameters('allowedSubnets')]"
+              }
+            },
+            "greater": 0
+          },
+          {
+            "allOf": [
+              {
+                "field": "Microsoft.Network/networkInterfaces/virtualMachine.id",
+                "exists": true
+              },
+              {
+                "value": "lenght(string(field('Microsoft.Network/networkInterfaces/virtualMachine.id')))",
+                "greater": 1
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "parameters": {
+      "allowedSubnets": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Allowed Subnets ID",
+          "description": "The resource IDs of the virtual network subnets that are allowed",
+          "strongType": "Microsoft.Network/virtualNetworks/subnets"
+        }
+      },
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Enable or disable the execution of this policy"
+        },
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Audit"
+      }
+    }
+  }

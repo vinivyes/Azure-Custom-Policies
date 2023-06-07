@@ -1,0 +1,25 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+      "value": "[length(items(intersection(subscription().tags, if(empty(field('tags')),json('{}'),field('tags')))))]",
+      "less": "[length(items(subscription().tags))]"
+    },
+    "then": {
+      "effect": "modify",
+      "details": {
+        "roleDefinitionIds": [
+          "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+        ],
+        "operations": [
+          {
+            "operation": "addOrReplace",
+            "field": "tags",
+            "value": "[union(subscription().tags,if(empty(field('tags')),json('{}'),field('tags')))]"
+          }
+        ]
+      }
+    }
+  },
+  "parameters": {}
+}

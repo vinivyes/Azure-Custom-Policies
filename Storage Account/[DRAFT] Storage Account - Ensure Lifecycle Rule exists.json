@@ -1,0 +1,149 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Storage/storageAccounts"
+        },
+        {
+          "field": "name",
+          "contains": "[parameters('storageAccountNameContains')]"
+        }
+      ]
+    },
+    "then": {
+      "effect": "DeployIfNotExists",
+      "details": {
+        "type": "Microsoft.Storage/storageAccounts/managementPolicies",
+        "name": "default",
+        "existenceCondition": {
+          "count": {
+            "field": "Microsoft.Storage/storageAccounts/managementPolicies/policy.rules[*]",
+            "where": {
+              "allOf": [
+                {
+                  "field": "Microsoft.Storage/storageAccounts/managementPolicies/policy.rules[*].name",
+                  "equals": "[parameters('ruleName')]"
+                },
+                {
+                  "field": "Microsoft.Storage/storageAccounts/managementPolicies/policy.rules[*].definition.actions.baseBlob.delete.daysAfterModificationGreaterThan",
+                  "equals": "[parameters('daysAfterModification')]"
+                }
+              ]
+            }
+          },
+          "greater": 0
+        },
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "storageAccountName": {
+                  "type": "String"
+                },
+                "ruleName": {
+                  "type": "String"
+                },
+                "ruleDurationDays": {
+                  "type": "Int"
+                },
+                "prefixMatchList": {
+                  "type": "Array"
+                }
+              },
+              "variables": {
+                "newRule": [
+                  {
+                    "definition": {
+                      "actions": {
+                        "baseBlob": {
+                          "delete": {
+                            "daysAfterModificationGreaterThan": "[parameters('ruleDurationDays')]"
+                          }
+                        }
+                      },
+                      "filters": {
+                        "blobTypes": [
+                          "blockBlob"
+                        ],
+                        "prefixMatch": "[parameters('prefixMatchList')]"
+                      }
+                    },
+                    "enabled": true,
+                    "name": "[parameters('ruleName')]",
+                    "type": "Lifecycle"
+                  }
+                ]
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Storage/storageAccounts/managementPolicies",
+                  "apiVersion": "2021-09-01",
+                  "name": "[concat(parameters('storageAccountName'),'/default')]",
+                  "properties": {
+                    "policy": {
+                      "rules": "[variables('newRule')]"
+                    }
+                  }
+                }
+              ],
+              "outputs": {}
+            },
+            "parameters": {
+              "storageAccountName": {
+                "value": "[field('fullName')]"
+              },
+              "ruleName": {
+                "value": "[parameters('ruleName')]"
+              },
+              "prefixMatchList": {
+                "value": "[parameters('prefixMatchList')]"
+              },
+              "ruleDurationDays": {
+                "value": "[parameters('daysAfterModification')]"
+              }
+            }
+          }
+        },
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/17d1049b-9a84-46fb-8f53-869881c3d3ab"
+        ]
+      }
+    }
+  },
+  "parameters": {
+    "storageAccountNameContains": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Evaluate Storage Accounts with names containing",
+        "description": "Only evaluate Storage Accounts that contains a certain String in their name"
+      }
+    },
+    "daysAfterModification": {
+      "type": "Integer",
+      "metadata": {
+        "displayName": "Delete Modified After (Days)",
+        "description": "Delete Blobs that have been modified in the last # of days."
+      }
+    },
+    "prefixMatchList": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Match Blob Prefix(es)",
+        "description": "What prefix(es) needs to be matched so a blob is evaluated by this rule."
+      }
+    },
+    "ruleName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Rule Name",
+        "description": "Give a name to this Lifecycle Rule."
+      }
+    }
+  }
+}

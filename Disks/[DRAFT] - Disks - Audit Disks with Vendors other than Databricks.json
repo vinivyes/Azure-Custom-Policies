@@ -1,0 +1,45 @@
+{
+      "mode": "Indexed",
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Compute/disks"
+            },
+            {
+              "field": "tags.Vendor",
+              "notEquals": "Databricks"
+            }
+          ]
+        },
+        "then": {
+          "effect": "[parameters('effect')]",
+          "details": {
+            "type": "Microsoft.Compute/disks",
+            "name": "[field('name')]",
+            "existenceCondition": {
+              "field": "Microsoft.Compute/disks/networkAccessPolicy",
+              "in": [
+                "DenyAll",
+                "AllowPrivate"
+              ]
+            }
+          }
+        }
+      },
+      "parameters": {
+        "effect": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Effect",
+            "description": "Enable or disable the execution of the policy."
+          },
+          "allowedValues": [
+            "AuditIfNotExists",
+            "Disabled"
+          ],
+          "defaultValue": "AuditIfNotExists"
+        }
+      }
+    }

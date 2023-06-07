@@ -1,0 +1,28 @@
+{
+      "mode": "Indexed",
+      "policyRule": {
+            "if": {
+                  "field": "[concat('tags[', parameters('tagName'), ']')]",
+                  "notIn": "[parameters('allowedTagValues')]"
+            },
+            "then": {
+                  "effect": "deny"
+            }
+      },
+      "parameters": {
+            "tagName": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Tag Name",
+                        "description": "Name of the tag, such as 'environment'"
+                  }
+            },
+            "allowedTagValues": {
+                  "type": "Array",
+                  "metadata": {
+                        "displayName": "Allowed Tag Values",
+                        "description": "A list of value the tag can accept, such as 'production'"
+                  }
+            }
+      }
+}

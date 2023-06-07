@@ -1,0 +1,34 @@
+{
+      "mode": "All",
+      "parameters": {
+            "effect": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Effect",
+                        "description": "Enable or disable the execution of the policy"
+                  },
+                  "allowedValues": [
+                        "Deny",
+                        "Disabled"
+                  ],
+                  "defaultValue": "Deny"
+            }
+      },
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.EventHub/namespaces/NetworkRuleSets"
+                        },
+                        {
+                              "field": "Microsoft.EventHub/namespaces/NetworkRuleSets/publicNetworkAccess",
+                              "notEquals": "Disabled"
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "[parameters('effect')]"
+            }
+      }
+}

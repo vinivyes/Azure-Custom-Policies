@@ -1,0 +1,69 @@
+{
+      "mode": "Indexed",
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.Sql/servers/databases"
+                        },
+                        {
+                              "anyOf": [
+                                    {
+                                          "field": "Microsoft.Sql/servers/databases/sku.tier",
+                                          "equals": "GeneralPurpose"
+                                    },
+                                    {
+                                          "field": "Microsoft.Sql/servers/databases/sku.tier",
+                                          "equals": "Hyperscale"
+                                    },
+                                    {
+                                          "field": "Microsoft.Sql/servers/databases/sku.tier",
+                                          "equals": "BusinessCritical"
+                                    }
+                              ]
+                        },
+                        {
+                              "field": "Microsoft.Sql/servers/databases/sku.name",
+                              "notContains": "GP_S"
+                        },
+                        {
+                              "field": "Microsoft.Sql/servers/databases/sku.name",
+                              "notEquals": "DataWarehouse"
+                        },
+                        {
+                              "field": "Microsoft.Sql/servers/databases/sku.name",
+                              "notEquals": "ElasticPool"
+                        },
+                        {
+                              "anyOf": [
+                                    {
+                                          "field": "Microsoft.Sql/servers/databases/licenseType",
+                                          "notEquals": "BasePrice"
+                                    },
+                                    {
+                                          "field": "Microsoft.Sql/servers/databases/licenseType",
+                                          "exists": "false"
+                                    }
+                              ]
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "modify",
+                  "details": {
+                        "roleDefinitionIds": [
+                              "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+                        ],
+                        "operations": [
+                              {
+                                    "operation": "addOrReplace",
+                                    "field": "Microsoft.Sql/servers/databases/licenseType",
+                                    "value": "BasePrice"
+                              }
+                        ]
+                  }
+            }
+      },
+      "parameters": {}
+}

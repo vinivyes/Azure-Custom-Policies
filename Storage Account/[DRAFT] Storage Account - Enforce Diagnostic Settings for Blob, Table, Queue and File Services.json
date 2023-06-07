@@ -1,0 +1,59 @@
+{
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "id",
+            "contains": "/Microsoft.Storage/storageAccounts/"
+          },
+          {
+            "anyOf": [
+              {
+                "field": "id",
+                "contains": "/blobServices/default/providers/microsoft.insights/diagnosticSettings/"
+              },
+              {
+                "field": "id",
+                "contains": "/tableServices/default/providers/microsoft.insights/diagnosticSettings/"
+              },
+              {
+                "field": "id",
+                "contains": "/fileServices/default/providers/microsoft.insights/diagnosticSettings/"
+              },
+              {
+                "field": "id",
+                "contains": "/queueServices/default/providers/microsoft.insights/diagnosticSettings/"
+              }
+            ]
+          },
+          {
+            "count": {
+              "field": "Microsoft.Insights/diagnosticSettings/logs[*]",
+              "where": {
+                "allOf": [
+                  {
+                    "field": "Microsoft.Insights/diagnosticSettings/logs[*].category",
+                    "in": [
+                      "StorageRead",
+                      "StorageWrite",
+                      "StorageDelete"
+                    ]
+                  },
+                  {
+                    "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled",
+                    "equals": false
+                  }
+                ]
+              }
+            },
+            "greater": 0
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    },
+    "parameters": {}
+  }

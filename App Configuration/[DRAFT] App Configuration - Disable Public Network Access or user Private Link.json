@@ -1,0 +1,48 @@
+{
+      "mode": "Indexed",
+      "parameters": {
+            "effect": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Effect",
+                        "description": "Enable or disable the execution of the policy"
+                  },
+                  "allowedValues": [
+                        "Audit",
+                        "Disabled"
+                  ],
+                  "defaultValue": "Audit"
+            }
+      },
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.AppConfiguration/configurationStores"
+                        },
+                        {
+                              "allOf": [
+                                    {
+                                          "field": "Microsoft.AppConfiguration/configurationStores/publicNetworkAccess",
+                                          "notEquals": "Disabled"
+                                    },
+                                    {
+                                          "count": {
+                                                "field": "Microsoft.AppConfiguration/configurationStores/privateEndpointConnections[*]",
+                                                "where":{
+                                                      "field": "Microsoft.AppConfiguration/configurationStores/privateEndpointConnections[*].privateLinkServiceConnectionState.status",
+                                                      "equals":"Approved"
+                                                }
+                                          },
+                                          "equals": 0
+                                    }
+                              ]
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "[parameters('effect')]"
+            }
+      }
+}

@@ -1,0 +1,35 @@
+{
+      "mode": "All",
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Authorization/roleAssignments"
+            },
+            {
+              "count": {
+                "value": "[parameters('notAllowedRoleIds')]",
+                "where": {
+                  "field": "Microsoft.Authorization/roleAssignments/roleDefinitionId",
+                  "like": "[concat('*',current())]"
+                }
+              },
+              "greater": 0
+            }
+          ]
+        },
+        "then": {
+          "effect": "deny"
+        }
+      },
+      "parameters": {
+        "notAllowedRoleIds": {
+          "type": "Array",
+          "metadata": {
+            "displayName": "Not allowed Role Definition ID",
+            "description": "A list of IDs of Role Definitions that are not allowed"
+          }
+        }
+      }
+    }

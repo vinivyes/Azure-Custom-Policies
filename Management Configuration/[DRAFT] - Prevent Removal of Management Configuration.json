@@ -1,0 +1,35 @@
+{
+      "mode": "All",
+      "policyRule": {
+        "if": 
+
+//...Other Conditions
+{
+      "allOf":[
+            {
+                  "value": "[resourceGroup().name]",
+                  "notContains": "MyGroup"
+            },
+            {
+                  "value": "[subscription().displayName]",
+                  "in":[
+                        "devtest",
+                        "uat"
+                  ]
+            }
+                  
+      ]
+},
+//...Other Conditions
+
+        "then": {
+          "effect": "DenyAction",
+          "details": {
+            "actionNames": [
+              "delete"
+            ]
+          }
+        }
+      },
+      "parameters": {}
+    }

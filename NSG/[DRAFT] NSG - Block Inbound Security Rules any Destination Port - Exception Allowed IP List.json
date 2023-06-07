@@ -1,0 +1,212 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "anyOf": [
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Network/networkSecurityGroups"
+            },
+            {
+              "count": {
+                "field": "Microsoft.Network/networkSecurityGroups/securityRules[*]",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].access",
+                      "equals": "Allow"
+                    },
+                    {
+                      "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].direction",
+                      "equals": "Inbound"
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                          "in": [
+                            "*",
+                            "Internet",
+                            "0.0.0.0/0"
+                          ]
+                        },
+                        {
+                          "allOf":[
+                            {
+                              "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                              "notIn": [
+                                "*",
+                                "Internet",
+                                "",
+                                null
+                              ]
+                            },
+                            {
+                              "anyOf":[
+                                {
+                                  "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                                  "contains": "."
+                                },
+                                {
+                                  "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                                  "contains": ":"
+                                }
+                              ]
+                            },
+                            {
+                              "count":{
+                                "value":"[parameters('allowedIPsources')]",
+                                "name":"allowed",
+                                "where":{
+                                  "allOf":[
+                                    
+                                    {
+                                      "value": "[if(equals(length(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix'),'')),'.')),4),ipRangeContains(current('allowed'),replace(replace(replace(replace(string(field('Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix')),'[',''),']',''),'\"',''),'\\','')),equals(-1,1))]",
+                                      "equals": true
+                                    }
+                                  ]
+                                }
+                              },
+                              "equals":0
+                            }
+                          ]
+                        },
+                        {
+                          "count":{
+                            "field":"Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefixes[*]",
+                            "where":{
+                              "count":{
+                                "value":"[parameters('allowedIPsources')]",
+                                "name":"allowed",
+                                "where":{
+                                  "anyOf":[
+                                    {
+                                      "value": "[ipRangeContains(current('allowed'),replace(replace(replace(replace(string(first(field('Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefixes[*]'))),'[',''),']',''),'\"',''),'\\',''))]",
+                                      "equals": true
+                                    }
+                                  ]
+                                }
+                              },
+                              "equals":0
+                            }
+                          },
+                          "greater":0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "greater": 0
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Network/networkSecurityGroups/securityRules"
+            },
+            {
+              "field": "Microsoft.Network/networkSecurityGroups/securityRules/access",
+              "equals": "Allow"
+            },
+            {
+              "field": "Microsoft.Network/networkSecurityGroups/securityRules/direction",
+              "equals": "Inbound"
+            },
+            {
+              "anyOf": [
+                {
+                  "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix",
+                  "in": [
+                    "*",
+                    "Internet",
+                    "0.0.0.0/0"
+                  ]
+                },
+                {
+                  "allOf":[
+                    {
+                      "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix",
+                      "notIn": [
+                        "*",
+                        "Internet",
+                        "",
+                        null
+                      ]
+                    },
+                    {
+                      "anyOf":[
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix",
+                          "contains": "."
+                        },
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix",
+                          "contains": ":"
+                        }
+                      ]
+                    },
+                    {
+                      "count":{
+                        "value":"[parameters('allowedIPsources')]",
+                        "name":"allowed",
+                        "where":{
+                          "allOf":[
+                            
+                            {
+                              "value": "[if(equals(length(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix'),'')),'.')),4),ipRangeContains(current('allowed'),replace(replace(replace(replace(string(field('Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix')),'[',''),']',''),'\"',''),'\\','')),equals(-1,1))]",
+                              "equals": true
+                            }
+                          ]
+                        }
+                      },
+                      "equals":0
+                    }
+                  ]
+                },
+                {
+                  "count":{
+                    "field":"Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefixes[*]",
+                    "where":{
+                      "count":{
+                        "value":"[parameters('allowedIPsources')]",
+                        "name":"allowed",
+                        "where":{
+                          "anyOf":[
+                            {
+                              "value": "[ipRangeContains(current('allowed'),replace(replace(replace(replace(string(first(field('Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefixes[*]'))),'[',''),']',''),'\"',''),'\\',''))]",
+                              "equals": true
+                            }
+                          ]
+                        }
+                      },
+                      "equals":0
+                    }
+                  },
+                  "greater":0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "effect": "deny"
+    }
+  },
+  "parameters": {
+    "allowedIPsources": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Allowed IP Sources",
+        "description": null
+      },
+      "defaultValue":[]
+    }
+  }
+}

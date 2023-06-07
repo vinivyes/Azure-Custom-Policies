@@ -1,0 +1,142 @@
+{
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "equals": "Microsoft.KeyVault/vaults/keys",
+        "field": "type"
+      },
+      "then": {
+        "details": {
+          "deployment": {
+            "properties": {
+              "mode": "incremental",
+              "parameters": {
+                "vaultName": {
+                  "value": "[first(split(field('fullName'),'/'))]"
+                },
+                "keyname": {
+                  "value": "[field('name')]"
+                },
+                "kty": {
+                  "value": "[field('Microsoft.KeyVault/vaults/keys/kty')]"
+                },
+                "rotatationTimeAfterCreate": {
+                  "value": "[parameters('rotatationTimeAfterCreate')]"
+                },
+                "expiryTime": {
+                  "value": "[parameters('expiryTime')]"
+                },
+                "notifyTime": {
+                  "value": "[parameters('notifyTime')]"
+                }
+              },
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {
+                  "vaultName": {
+                    "type": "String"
+                  },
+                  "keyName": {
+                    "type": "String"
+                  },
+                  "kty": {
+                    "type": "String"
+                  },
+                  "rotatationTimeAfterCreate": {
+                    "type": "String"
+                  },
+                  "expiryTime": {
+                    "type": "String"
+                  },
+                  "notifyTime": {
+                    "type": "String"
+                  }
+                },
+                "resources": [
+                  {
+                    "type": "Microsoft.KeyVault/vaults/keys",
+                    "apiVersion": "2021-06-01-preview",
+                    "name": "[concat(parameters('vaultName'), '/', parameters('keyName'))]",
+                    "location": "[resourceGroup().location]",
+                    "properties": {
+                      "vaultName": "[parameters('vaultName')]",
+                      "kty": "[parameters('kty')]",
+                      "rotationPolicy": {
+                        "lifetimeActions": [
+                          {
+                            "trigger": {
+                              "timeAfterCreate": "[parameters('rotatationTimeAfterCreate')]",
+                              "timeBeforeExpiry": ""
+                            },
+                            "action": {
+                              "type": "Rotate"
+                            }
+                          },
+                          {
+                            "trigger": {
+                              "timeBeforeExpiry": "[parameters('notifyTime')]"
+                            },
+                            "action": {
+                              "type": "Notify"
+                            }
+                          }
+                        ],
+                        "attributes": {
+                          "expiryTime": "[parameters('expiryTime')]"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "existenceCondition": {
+            "count": {
+              "field": "Microsoft.KeyVault/vaults/keys/rotationPolicy.lifetimeActions[*]",
+              "where": {
+                "field": "Microsoft.KeyVault/vaults/keys/rotationPolicy.lifetimeActions[*].action.type",
+                "equals": "Rotate"
+              }
+            },
+            "greater": 0
+          },
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+            "/providers/Microsoft.Authorization/roleDefinitions/f25e0fa2-a7c8-4377-a976-54943a77a395",
+            "/providers/Microsoft.Authorization/roleDefinitions/00482a5a-887f-4fb3-b363-3b7fe8e74483"
+          ],
+          "type": "Microsoft.KeyVault/vaults/keys",
+          "name": "[field('fullName')]"
+        },
+        "effect": "deployIfNotExists"
+      }
+    },
+    "parameters": {
+      "rotatationTimeAfterCreate": {
+        "type": "String",
+        "metadata": {
+          "displayName": "rotatationTimeAfterCreate",
+          "description": "Time duration to trigger key rotation. i.e. P30D, P1M, P2Y"
+        },
+        "defaultValue": "P18M"
+      },
+      "expiryTime": {
+        "type": "String",
+        "metadata": {
+          "displayName": "expiryTime",
+          "description": "The expiry time for new key version. i.e. P90D, P2M, P3Y"
+        },
+        "defaultValue": "P2Y"
+      },
+      "notifyTime": {
+        "type": "String",
+        "metadata": {
+          "displayName": "notifyTime",
+          "description": "Near expiry Event Grid notification. i.e. P30D"
+        },
+        "defaultValue": "P30D"
+      }
+    }
+  }

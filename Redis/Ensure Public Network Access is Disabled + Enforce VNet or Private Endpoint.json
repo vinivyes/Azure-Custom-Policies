@@ -1,0 +1,74 @@
+{
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Cache/redis"
+          },
+          {
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "field": "Microsoft.Cache/Redis/subnetId",
+                    "exists": "true"
+                  },
+                  {
+                    "field": "Microsoft.Cache/Redis/subnetId",
+                    "notequals": "[parameters('AllowedVNetSubnet')]"
+                  }
+                ]
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "Microsoft.Cache/Redis/subnetId",
+                    "exists": "false"
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "field": "Microsoft.Cache/Redis/publicNetworkAccess",
+                        "exists": "false"
+                      },
+                      {
+                        "field": "Microsoft.Cache/Redis/publicNetworkAccess",
+                        "equals": "Enabled"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Effect if there's no private endpoint"
+        },
+        "allowedValues": [
+          "Deny",
+          "Audit",
+          "Disabled"
+        ],
+        "defaultValue": "Deny"
+      },
+      "AllowedVNetSubnet": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Authorized Subnets",
+          "description": null
+        }
+      }
+    }
+  }

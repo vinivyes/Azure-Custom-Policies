@@ -1,0 +1,274 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Sql/servers"
+        },
+        {
+          "field": "location",
+          "in": "[parameters('resourceLocation')]"
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]",
+      "details": {
+        "type": "Microsoft.Sql/servers/auditingSettings",
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+          "/providers/Microsoft.Authorization/roleDefinitions/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9"
+        ],
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.Sql/servers/auditingSettings/state",
+              "equals": "Enabled"
+            },
+            {
+              "field": "Microsoft.Sql/servers/auditingSettings/isAzureMonitorTargetEnabled",
+              "equals": "true"
+            },
+            {
+              "field": "Microsoft.Sql/servers/auditingSettings/storageAccountAccessKey",
+              "equals": ""
+            },
+            {
+              "field": "Microsoft.Sql/servers/auditingSettings/storageEndpoint",
+              "equals": "[concat('https://',last(split(parameters('storageAccount'),'/')),'.blob.core.windows.net/')]"
+            },
+            {
+              "field": "Microsoft.Sql/servers/auditingSettings/retentionDays",
+              "equals": "[parameters('retentionDays')]"
+            }
+          ]
+        },
+        "evaluationDelay":"AfterProvisioningSuccess",
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "http://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "resourceName": {
+                  "type": "String"
+                },
+                "resourceLocation": {
+                  "type": "String"
+                },
+                "storageAccount": {
+                  "type": "String"
+                },
+                "retentionDays": {
+                  "type": "Int"
+                },
+                "auditActionsAndGroups": {
+                  "type": "Array"
+                }
+              },
+              "variables": {
+                "unique": "[uniqueString(parameters('resourceName'))]"
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Resources/deployments",
+                  "apiVersion": "2021-04-01",
+                  "name": "[concat('getOriginalProperties',variables('unique'))]",
+                  "properties": {
+                    "mode": "Incremental",
+                    "expressionEvaluationOptions": {
+                      "scope": "inner"
+                    },
+                    "template": {
+                      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                      "contentVersion": "1.0.0.0",
+                      "parameters": {
+                        "resourceName": {
+                          "type": "String"
+                        }
+                      },
+                      "resources": [],
+                      "outputs": {
+                        "originalProperties": {
+                          "type": "Object",
+                          "value": "[reference(resourceId('Microsoft.Sql/servers',parameters('resourceName')),'2022-05-01-preview','Full')]"
+                        }
+                      }
+                    },
+                    "parameters": {
+                      "resourceName": {
+                        "value": "[parameters('resourceName')]"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "Microsoft.Resources/deployments",
+                  "apiVersion": "2021-04-01",
+                  "name": "[concat('enableSystemAssignedIdentity',variables('unique'))]",
+                  "dependsOn": [
+                    "[concat('getOriginalProperties',variables('unique'))]"
+                  ],
+                  "properties": {
+                    "mode": "Incremental",
+                    "expressionEvaluationOptions": {
+                      "scope": "inner"
+                    },
+                    "template": {
+                      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                      "contentVersion": "1.0.0.0",
+                      "parameters": {
+                        "resourceName": {
+                          "type": "String"
+                        },
+                        "resourceLocation": {
+                          "type": "String"
+                        },
+                        "resourceProperties": {
+                          "type": "Object"
+                        }
+                      },
+                      "variables": {
+                        "identity": "[if(contains(parameters('resourceProperties'),'identity'),parameters('resourceProperties').identity, createObject('type','SystemAssigned'))]"
+                      },
+                      "resources": [
+                        {
+                          "type": "Microsoft.Sql/servers",
+                          "name": "[parameters('resourceName')]",
+                          "apiVersion": "2022-05-01-preview",
+                          "location": "[parameters('resourceLocation')]",
+                          "identity": "[if(contains(variables('identity').type, 'UserAssigned'), union(variables('identity'),createObject('type','SystemAssigned,UserAssigned')), variables('identity'))]",
+                          "properties": "[parameters('resourceProperties').properties]"
+                        }
+                      ],
+                      "outputs": {
+                        "systemAssignedIdentityId": {
+                          "type": "String",
+                          "value": "[reference(resourceId('Microsoft.Sql/servers',parameters('resourceName')),'2022-05-01-preview','Full').identity.principalId]"
+                        }
+                      }
+                    },
+                    "parameters": {
+                      "resourceName": {
+                        "value": "[parameters('resourceName')]"
+                      },
+                      "resourceLocation": {
+                        "value": "[parameters('resourceLocation')]"
+                      },
+                      "resourceProperties": {
+                        "value": "[reference(resourceId('Microsoft.Resources/deployments',concat('getOriginalProperties',variables('unique'))), '2021-04-01', 'Full').properties.outputs.originalProperties.value]"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "Microsoft.Authorization/roleAssignments",
+                  "apiVersion": "2022-01-01-preview",
+                  "name": "[guid(concat(parameters('storageAccount'),parameters('resourceName')))]",
+                  "dependsOn": [
+                    "[concat('enableSystemAssignedIdentity',variables('unique'))]"
+                  ],
+                  "properties": {
+                    "roleDefinitionId": "/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+                    "principalId": "[reference(resourceId('Microsoft.Resources/deployments',concat('enableSystemAssignedIdentity',variables('unique'))), '2021-04-01', 'Full').properties.outputs.systemAssignedIdentityId.value]",
+                    "principalType": "ServicePrincipal"
+                  },
+                  "scope": "[parameters('storageAccount')]"
+                },
+                {
+                  "type": "Microsoft.Sql/servers/auditingSettings",
+                  "apiVersion": "2022-05-01-preview",
+                  "name": "[concat(parameters('resourceName'), '/default')]",
+                  "dependsOn": [
+                    "[guid(concat(parameters('storageAccount'),parameters('resourceName')))]"
+                  ],
+                  "properties": {
+                    "state": "Enabled",
+                    "storageEndpoint": "[concat('https://',last(split(parameters('storageAccount'),'/')),'.blob.core.windows.net/')]",
+                    "storageAccountAccessKey": "",
+                    "auditActionsAndGroups": "[parameters('auditActionsAndGroups')]",
+                    "retentionDays": "[parameters('retentionDays')]",
+                    "storageAccountSubscriptionId": "[first(skip(split(parameters('storageAccount'),'/'),2))]",
+                    "isStorageSecondaryKeyInUse": false,
+                    "isAzureMonitorTargetEnabled": true
+                  }
+                }
+              ]
+            },
+            "parameters": {
+              "resourceName": {
+                "value": "[field('name')]"
+              },
+              "resourceLocation": {
+                "value": "[field('location')]"
+              },
+              "storageAccount": {
+                "value": "[parameters('storageAccount')]"
+              },
+              "retentionDays": {
+                "value": "[parameters('retentionDays')]"
+              },
+              "auditActionsAndGroups": {
+                "value": "[parameters('auditActionsAndGroups')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy."
+      },
+      "allowedValues": [
+        "AuditIfNotExists",
+        "DeployIfNotExists",
+        "Disabled"
+      ],
+      "defaultValue": "DeployIfNotExists"
+    },
+    "resourceLocation": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Resource Location",
+        "description": "List of Locations that should be affected by this Policy",
+        "strongType": "location"
+      }
+    },
+    "storageAccount": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Storage Account Destination",
+        "description": "The ID of the Storage Account where logs will be sent to.",
+        "strongType": "Microsoft.Storage/storageAccounts"
+      }
+    },
+    "retentionDays": {
+      "type": "Integer",
+      "metadata": {
+        "displayName": "Retention Days",
+        "description": "How many days to retain the logs. (Default: 180)"
+      },
+      "defaultValue": 180
+    },
+    "auditActionsAndGroups": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Audit Actions and Groups",
+        "description": "What Actions and Groups to Audit."
+      },
+      "defaultValue": [
+        "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
+        "FAILED_DATABASE_AUTHENTICATION_GROUP",
+        "BATCH_COMPLETED_GROUP"
+      ]
+    }
+  }
+}

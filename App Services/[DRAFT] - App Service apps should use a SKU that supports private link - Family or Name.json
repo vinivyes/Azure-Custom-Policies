@@ -1,0 +1,65 @@
+{
+    "mode": "Indexed",
+    "policyRule": {
+        "if": {
+            "allOf": [
+                {
+                    "field": "type",
+                    "equals": "Microsoft.Web/serverFarms"
+                },
+                {
+                    "not": {
+                        "anyOf": [
+                            {
+                                "field": "Microsoft.Web/serverFarms/sku.family",
+                                "notIn": [
+                                    "Pv2",
+                                    "Pv3",
+                                    "EP",
+                                    "P",
+                                    "I",
+                                    "Iv2"
+                                ]
+                            },
+                            {
+                                "field": "Microsoft.Web/serverFarms/sku.name",
+                                "notIn": [
+                                    "I1",
+                                    "I1v2",
+                                    "I2",
+                                    "I2v2",
+                                    "I3",
+                                    "I3v2",
+                                    "P1V2",
+                                    "P1V3",
+                                    "P2V2",
+                                    "P2V3",
+                                    "P3V2",
+                                    "P3V3"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "then": {
+            "effect": "[parameters('effect')]"
+        }
+    },
+    "parameters": {
+        "effect": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Effect",
+                "description": "Enable or disable the execution of the policy"
+            },
+            "allowedValues": [
+                "Audit",
+                "Deny",
+                "Disabled"
+            ],
+            "defaultValue": "Audit"
+        }
+    }
+}

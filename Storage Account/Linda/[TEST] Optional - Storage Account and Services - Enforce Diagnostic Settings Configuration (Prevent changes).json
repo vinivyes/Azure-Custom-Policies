@@ -1,0 +1,306 @@
+{
+      "mode": "All",
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.Insights/diagnosticSettings"
+                        },
+                        {
+                              "field": "id",
+                              "contains": "Microsoft.Storage/storageAccounts/"
+                        },
+                        {
+                              "field": "name",
+                              "equals": "[parameters('diagnosticsSettingNameToUse')]"
+                        },
+                        {
+                              "anyOf": [
+                                    {
+                                          "allOf": [
+                                                {
+                                                      "value": "[contains(parameters('servicesToDeploy'),'storageAccount')]",
+                                                      "equals": true
+                                                },
+                                                {
+                                                      "value": "[length(split(field('id'),'/'))]",
+                                                      "equals": 13
+                                                },
+                                                {
+                                                      "count": {
+                                                            "field": "Microsoft.Insights/diagnosticSettings/metrics[*]",
+                                                            "where": {
+                                                                  "allOf": [
+                                                                        {
+                                                                              "field": "Microsoft.Insights/diagnosticSettings/metrics[*].category",
+                                                                              "equals": "Transaction"
+                                                                        },
+                                                                        {
+                                                                              "field": "Microsoft.Insights/diagnosticSettings/metrics[*].enabled",
+                                                                              "equals": true
+                                                                        },
+                                                                        {
+                                                                              "value": "[parameters('Transaction')]",
+                                                                              "equals": true
+                                                                        }
+                                                                  ]
+                                                            }
+                                                      },
+                                                      "notEquals": "[if(equals(toLower(string(parameters('Transaction'))),'true'),1,0)]"
+                                                },
+                                                {
+                                                      "field": "Microsoft.Insights/diagnosticSettings/workspaceId",
+                                                      "notEquals": "[parameters('logAnalyticsWspcId')]"
+                                                }
+                                          ]
+                                    },                                    
+                                    {
+                                          "allOf": [
+                                                {
+                                                      "count": {
+                                                            "field": "Microsoft.Insights/diagnosticSettings/logs[*]",
+                                                            "where": {
+                                                                  "anyOf": [
+                                                                        {
+                                                                              "allOf": [
+                                                                                    {
+                                                                                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].category",
+                                                                                          "equals": "StorageRead"
+                                                                                    },
+                                                                                    {
+                                                                                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled",
+                                                                                          "equals": true
+                                                                                    },
+                                                                                    {
+                                                                                          "value": "[parameters('StorageRead')]",
+                                                                                          "equals": true
+                                                                                    }
+                                                                              ]
+                                                                        },
+                                                                        {
+                                                                              "allOf": [
+                                                                                    {
+                                                                                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].category",
+                                                                                          "equals": "StorageWrite"
+                                                                                    },
+                                                                                    {
+                                                                                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled",
+                                                                                          "equals": true
+                                                                                    },
+                                                                                    {
+                                                                                          "value": "[parameters('StorageWrite')]",
+                                                                                          "equals": true
+                                                                                    }
+                                                                              ]
+                                                                        },
+                                                                        {
+                                                                              "allOf": [
+                                                                                    {
+                                                                                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].category",
+                                                                                          "equals": "StorageDelete"
+                                                                                    },
+                                                                                    {
+                                                                                          "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled",
+                                                                                          "equals": "[parameters('StorageDelete')]"
+                                                                                    },
+                                                                                    {
+                                                                                          "value": "[parameters('StorageDelete')]",
+                                                                                          "equals": true
+                                                                                    }
+                                                                              ]
+                                                                        }
+                                                                  ]
+                                                            }
+                                                      },
+                                                      "notEquals": "[add(add(if(equals(toLower(string(parameters('StorageRead'))),'true'),1,0),if(equals(toLower(string(parameters('StorageWrite'))),'true'),1,0)),if(equals(toLower(string(parameters('StorageDelete'))),'true'),1,0))]"
+                                                },
+                                                {
+                                                      "anyOf": [
+                                                            {
+                                                                  "allOf": [
+                                                                        {
+                                                                              "value": "[contains(parameters('servicesToDeploy'),'blobServices')]",
+                                                                              "equals": true
+                                                                        },
+                                                                        {
+                                                                              "field": "id",
+                                                                              "contains": "/blobServices/default/"
+                                                                        }
+                                                                  ]
+                                                            },
+                                                            {
+                                                                  "allOf": [
+                                                                        {
+                                                                              "value": "[contains(parameters('servicesToDeploy'),'tableServices')]",
+                                                                              "equals": true
+                                                                        },
+                                                                        {
+                                                                              "field": "id",
+                                                                              "contains": "/tableServices/default/"
+                                                                        }
+                                                                  ]
+                                                            },
+                                                            {
+                                                                  "allOf": [
+                                                                        {
+                                                                              "value": "[contains(parameters('servicesToDeploy'),'queueServices')]",
+                                                                              "equals": true
+                                                                        },
+                                                                        {
+                                                                              "field": "id",
+                                                                              "contains": "/queueServices/default/"
+                                                                        }
+                                                                  ]
+                                                            },
+                                                            {
+                                                                  "allOf": [
+                                                                        {
+                                                                              "value": "[contains(parameters('servicesToDeploy'),'fileServices')]",
+                                                                              "equals": true
+                                                                        },
+                                                                        {
+                                                                              "field": "id",
+                                                                              "contains": "/fileServices/default/"
+                                                                        }
+                                                                  ]
+                                                            }
+                                                      ]
+                                                }
+                                          ]
+                                    },
+                                    {
+                                          "count": {
+                                                "field": "Microsoft.Insights/diagnosticSettings/metrics[*]",
+                                                "where": {
+                                                      "allOf": [
+                                                            {
+                                                                  "field": "Microsoft.Insights/diagnosticSettings/metrics[*].category",
+                                                                  "equals": "Transaction"
+                                                            },
+                                                            {
+                                                                  "field": "Microsoft.Insights/diagnosticSettings/metrics[*].enabled",
+                                                                  "equals": true
+                                                            },
+                                                            {
+                                                                  "value": "[parameters('Transaction')]",
+                                                                  "equals": true
+                                                            }
+                                                      ]
+                                                }
+                                          },
+                                          "notEquals": "[if(equals(toLower(string(parameters('Transaction'))),'true'),1,0)]"
+                                    },
+                                    {
+                                          "field": "Microsoft.Insights/diagnosticSettings/workspaceId",
+                                          "notEquals": "[parameters('logAnalyticsWspcId')]"
+                                    }
+                              ]
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "[parameters('effect')]"
+            }
+      },
+      "parameters": {
+            "StorageDelete": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "StorageDelete - Enabled",
+                        "description": "Whether to stream StorageDelete logs to the Log Analytics - True or False"
+                  },
+                  "allowedValues": [
+                        "True",
+                        "False"
+                  ],
+                  "defaultValue": "True"
+            },
+            "StorageRead": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "StorageRead - Enabled",
+                        "description": "Whether to stream StorageRead logs to the Log Analytics - True or False"
+                  },
+                  "allowedValues": [
+                        "True",
+                        "False"
+                  ],
+                  "defaultValue": "True"
+            },
+            "StorageWrite": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "StorageWrite - Enabled",
+                        "description": "Whether to stream StorageWrite logs to the Log Analytics - True or False"
+                  },
+                  "allowedValues": [
+                        "True",
+                        "False"
+                  ],
+                  "defaultValue": "True"
+            },
+            "Transaction": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Transaction - Enabled",
+                        "description": "Whether to stream Transaction logs to the Log Analytics - True or False"
+                  },
+                  "allowedValues": [
+                        "True",
+                        "False"
+                  ],
+                  "defaultValue": "True"
+            },
+            "logAnalyticsWspcId": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Log Analytics workspace",
+                        "description": "Select Log Analytics workspace from the dropdown list. If this workspace is outside of the scope of the assignment you must manually grant 'Log Analytics Contributor' permissions (or similar) to the policy assignment's principal ID.",
+                        "strongType": "omsWorkspace",
+                        "assignPermissions": true
+                  }
+            },
+            "diagnosticsSettingNameToUse": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Setting name",
+                        "description": "Name of the diagnostic settings."
+                  },
+                  "defaultValue": "storageAccountsDiagnosticsLogsToLogAnalytics"
+            },
+            "effect": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Effect",
+                        "description": "Enable or disable the execution of the policy"
+                  },
+                  "allowedValues": [
+                        "Deny",
+                        "Disabled"
+                  ],
+                  "defaultValue": "Deny"
+            },
+            "servicesToDeploy": {
+                  "type": "Array",
+                  "metadata": {
+                        "displayName": "Storage services to deploy",
+                        "description": "List of Storage services to deploy"
+                  },
+                  "allowedValues": [
+                        "storageAccount",
+                        "blobServices",
+                        "fileServices",
+                        "tableServices",
+                        "queueServices"
+                  ],
+                  "defaultValue": [
+                        "storageAccount",
+                        "blobServices",
+                        "fileServices",
+                        "tableServices",
+                        "queueServices"
+                  ]
+            }
+      }
+}

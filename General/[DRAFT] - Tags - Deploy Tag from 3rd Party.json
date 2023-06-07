@@ -1,0 +1,82 @@
+{
+      "mode": "Indexed",
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "[concat('tags[', parameters('tagName'), ']')]",
+              "exists": "false"
+            }
+          ]
+        },
+        "then": {
+          "effect": "deployIfNotExists",
+          "details": {
+            "type": "Microsoft.Resources/tags",
+            "name": "default",
+            "evaluationDelay": "AfterProvisioningSuccess",
+            "roleDefinitionIds": [
+              "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+            ],
+            "existenceCondition": {
+              "allOf": [
+                {
+                  "field": "[concat('tags[', parameters('tagName'), ']')]",
+                  "exists": "true"
+                }
+              ]
+            },
+            "deployment": {
+              "properties": {
+                "mode": "incremental",
+                "template": {
+                  "$schema": "http://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "resourceId": {
+                      "type": "string"
+                    },
+                    "runDateTime": {
+                      "type": "string",
+                      "defaultValue": "[utcNow()]"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Resources/deploymentScripts",
+                      "apiVersion": "2020-10-01",
+                      "name": "[concat('addTag-',uniqueString(parameters('resourceId')))]",
+                      "location": "[resourceGroup().location]",
+                      "kind": "AzurePowerShell",
+                      "properties": {
+                        "forceUpdateTag": "[parameters('runDateTime')]",
+                        "arguments": "[concat('-resourceId \\\"',parameters('resourceId'),'\\\"')]",
+                        "azPowerShellVersion": "9.1",
+                        "scriptContent": "param([string] $resourceId) \n Write-Host $resourceId",
+                        "supportingScriptUris": [],
+                        "timeout": "PT10M",
+                        "retentionInterval": "PT1H"
+                      }
+                    }
+                  ]
+                },
+                "parameters": {
+                  "resourceId": {
+                    "value": "[field('id')]"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": {
+        "tagName": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Tag Name",
+            "description": "Name of the tag, such as 'environment'"
+          }
+        }
+      }
+    }

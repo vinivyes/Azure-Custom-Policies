@@ -1,0 +1,22 @@
+{
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Resources/subscriptions/resourceGroups"
+          }
+        ]
+      },
+      "then": {
+            "effect": "auditIfNotExists",
+            "existenceCondition": {
+                "not":{
+                    "field":"type",
+                    "equals":"Microsoft.Compute/virtualMachines"
+                }
+            }
+        }
+    }
+  }

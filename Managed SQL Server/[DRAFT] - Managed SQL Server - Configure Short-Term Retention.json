@@ -1,0 +1,80 @@
+{
+	"mode": "Indexed",
+	"policyRule": {
+	  "if": {
+	    "field": "type",
+	    "equals": "Microsoft.Sql/managedInstances/databases"
+	  },
+	  "then": {
+	    "effect": "[parameters('effect')]",
+	    "details": {
+		"type": "Microsoft.Sql/managedInstances/databases/backupShortTermRetentionPolicies",
+		"name": "default",
+		"evaluationDelay": "AfterProvisioningSuccess",
+		"roleDefinitionIds": [
+		  "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+		],
+		"existenceCondition": {
+		  "field": "Microsoft.Sql/managedInstances/databases/backupShortTermRetentionPolicies/retentionDays",
+		  "equals": "[parameters('retentionDays')]"
+		},
+		"deployment": {
+		  "properties": {
+		    "mode": "incremental",
+		    "template": {
+			"$schema": "http://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+			"contentVersion": "1.0.0.0",
+			"parameters": {
+			  "resourceName": {
+			    "type": "String"
+			  },
+			  "retentionDays": {
+			    "type": "Int"
+			  }
+			},
+			"resources": [
+			  {
+			    "type": "Microsoft.Sql/managedInstances/databases/backupShortTermRetentionPolicies",
+			    "apiVersion": "2018-06-01-preview",
+			    "name": "[concat(parameters('resourceName'),'/default')]",
+			    "properties": {
+				"retentionDays": "[parameters('retentionDays')]"
+			    }
+			  }
+			]
+		    },
+		    "parameters": {
+			"resourceName": {
+			  "value": "[field('fullName')]"
+			},
+			"retentionDays": {
+			  "value": "[parameters('retentionDays')]"
+			}
+		    }
+		  }
+		}
+	    }
+	  }
+	},
+	"parameters": {
+	  "retentionDays": {
+	    "type": "Integer",
+	    "metadata": {
+		"displayName": "Retention Days",
+		"description": "Number of days to retain Point-in-Time Restore (Example: 31)"
+	    }
+	  },
+	  "effect": {
+	    "type": "String",
+	    "metadata": {
+		"displayName": "Effect",
+		"description": "Enable or disable the execution of the policy"
+	    },
+	    "allowedValues": [
+		"DeployIfNotExists",
+		"Disabled"
+	    ],
+	    "defaultValue": "DeployIfNotExists"
+	  }
+	}
+    }

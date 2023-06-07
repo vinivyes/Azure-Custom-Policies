@@ -1,0 +1,198 @@
+{
+      "mode": "All",
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Resources/subscriptions"
+            }
+          ]
+        },
+        "then": {
+          "effect": "deployIfNotExists",
+          "details": {
+            "type": "Microsoft.Insights/diagnosticSettings",
+            "name": "[parameters('profileName')]",
+            "existenceCondition": {
+              "allOf": [
+                {
+                  "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled",
+                  "equals": "[parameters('logsEnabled')]"
+                },
+                {
+                  "field": "Microsoft.Insights/diagnosticSettings/metrics[*].enabled",
+                  "equals": "[parameters('metricsEnabled')]"
+                }
+              ]
+            },
+            "existenceScope": "subscription",
+            "deploymentScope": "subscription",
+            "roleDefinitionIds": [
+              "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+            ],
+            "deployment": {
+              "location": "eastus2",
+              "properties": {
+                "mode": "incremental",
+                "template": {
+                  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "fullName": {
+                      "type": "string"
+                    },
+                    "eventHubRuleId": {
+                      "type": "string"
+                    },
+                    "metricsEnabled": {
+                      "type": "string"
+                    },
+                    "logsEnabled": {
+                      "type": "string"
+                    },
+                    "profileName": {
+                      "type": "string"
+                    },
+                    "EHname": {
+                      "type": "string"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Insights/diagnosticSettings",
+                      "apiVersion": "2017-05-01-preview",
+                      "name": "[parameters('profileName')]",
+                      "dependsOn": [],
+                      "properties": {
+                        "eventHubName": "[parameters('EHname')]",
+                        "eventHubAuthorizationRuleId": "[parameters('eventHubRuleId')]",
+                        "metrics": [
+                          {
+                            "category": "AllMetrics",
+                            "enabled": "[parameters('metricsEnabled')]",
+                            "retentionPolicy": {
+                              "enabled": false,
+                              "days": 0
+                            }
+                          }
+                        ],
+                        "logs": [
+                          {
+                            "category": "Administrative",
+                            "enabled": "[parameters('logsEnabled')]"
+                          },
+                          {
+                            "category": "Security",
+                            "enabled": "[parameters('logsEnabled')]"
+                          },
+                          {
+                            "category": "ServiceHealth",
+                            "enabled": "[parameters('logsEnabled')]"
+                          },
+                          {
+                            "category": "Alert",
+                            "enabled": "[parameters('logsEnabled')]"
+                          },
+                          {
+                            "category": "Recommendation",
+                            "enabled": "[parameters('logsEnabled')]"
+                          },
+                          {
+                            "category": "Policy",
+                            "enabled": "[parameters('logsEnabled')]"
+                          },
+                          {
+                            "category": "Autoscale",
+                            "enabled": "[parameters('logsEnabled')]"
+                          },
+                          {
+                            "category": "ResourceHealth",
+                            "enabled": "[parameters('logsEnabled')]"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "outputs": {
+                    "policy": {
+                      "type": "string",
+                      "value": "[concat('Enabled diagnostic settings for ', parameters('fullName'))]"
+                    }
+                  }
+                },
+                "parameters": {
+                  "fullName": {
+                    "value": "[field('fullName')]"
+                  },
+                  "eventHubRuleId": {
+                    "value": "[parameters('eventHubRuleId')]"
+                  },
+                  "metricsEnabled": {
+                    "value": "[parameters('metricsEnabled')]"
+                  },
+                  "logsEnabled": {
+                    "value": "[parameters('logsEnabled')]"
+                  },
+                  "profileName": {
+                    "value": "[parameters('profileName')]"
+                  },
+                  "EHname": {
+                    "value": "[parameters('EHname')]"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": {
+        "profileName": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Profile name",
+            "description": "The diagnostic settings profile name"
+          },
+          "defaultValue": "LogsToSplunk-Policy"
+        },
+        "eventHubRuleId": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Event Hub Authorization Rule Id",
+            "description": "The Event Hub authorization rule Id for Azure Diagnostics. The authorization rule needs to be at Event Hub namespace level. e.g. /subscriptions/{subscription Id}/resourceGroups/{resource group}/providers/Microsoft.EventHub/namespaces/{Event Hub namespace}/authorizationrules/{authorization rule}",
+            "assignPermissions": true
+          }
+        },
+        "metricsEnabled": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Enable metrics",
+            "description": "Whether to enable metrics stream to the Event Hub - True or False"
+          },
+          "allowedValues": [
+            "True",
+            "False"
+          ],
+          "defaultValue": "False"
+        },
+        "logsEnabled": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Enable logs",
+            "description": "Whether to enable logs stream to the Event Hub - True or False"
+          },
+          "allowedValues": [
+            "True",
+            "False"
+          ],
+          "defaultValue": "True"
+        },
+        "EHname": {
+          "type": "String",
+          "metadata": {
+            "displayName": "EHname",
+            "description": "Enter Event Hub name. Please add existing EH name else it is going to create a new EH name"
+          }
+        }
+      }
+    }

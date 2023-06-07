@@ -1,0 +1,356 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Sql/servers/databases"
+        },
+        {
+          "field": "name",
+          "equals": "master"
+        },
+        {
+          "value": "[resourceGroup().name]",
+          "notContains": "managedrg"
+        },
+        {
+          "value": "[resourceGroup().name]",
+          "notContains": "corp-ediscovery-ed4wkp-prod"
+        },
+        {
+          "anyOf": [
+            {
+              "value": "[subscription().displayName]",
+              "notEquals": "gsk-corp-platforms-prod"
+            },
+            {
+              "allOf": [
+                {
+                  "value": "[subscription().displayName]",
+                  "equals": "gsk-corp-platforms-prod"
+                },
+                {
+                  "value": "[resourceGroup().name]",
+                  "notContains": "Corp-Platforms-RPA-Application-Resources"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "count": {
+            "value": "[items(parameters('eventHubAuthorizationRuleId'))]",
+            "name": "locations",
+            "where": {
+              "field": "location",
+              "equals": "[current('locations').key]"
+            }
+          },
+          "greater": 0
+        }
+      ]
+    },
+    "then": {
+      "effect": "deployIfNotExists",
+      "details": {
+        "type": "microsoft.insights/diagnosticSettings",
+        "evaluationDelay": "AfterProvisioningSuccess",
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+        ],
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.Insights/diagnosticSettings/eventHubName",
+              "equals": "[parameters('eventHubName')]"
+            },
+            {
+              "count": {
+                "value": "[items(parameters('eventHubAuthorizationRuleId'))]",
+                "name": "locations",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "location",
+                      "equals": "[current('locations').key]"
+                    },
+                    {
+                      "field": "Microsoft.Insights/diagnosticSettings/eventHubAuthorizationRuleId",
+                      "matchInsensitively": "[current('locations').value]"
+                    }
+                  ]
+                }
+              },
+              "greater": 0
+            },
+            {
+              "count": {
+                "field": "Microsoft.Insights/diagnosticSettings/logs[*]",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Insights/diagnosticSettings/logs[*].enabled",
+                      "equals": true
+                    },
+                    {
+                      "field": "Microsoft.Insights/diagnosticSettings/logs[*].category",
+                      "equals": "SQLSecurityAuditEvents"
+                    }
+                  ]
+                }
+              },
+              "greater": 0
+            }
+          ]
+        },
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "http://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "resourceName": {
+                  "type": "string"
+                },
+                "eventHubName": {
+                  "type": "string"
+                },
+                "eventHubAuthorizationRuleId": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "runDateTime": {
+                  "type": "string",
+                  "defaultValue": "[utcNow()]"
+                },
+                "deploySubscriptionId": {
+                  "type": "string"
+                },
+                "deployRG": {
+                  "type": "string"
+                }
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Resources/deployments",
+                  "apiVersion": "2021-04-01",
+                  "name": "[concat('Script-',uniqueString(parameters('resourceName'), guid(parameters('runDateTime'))))]",
+                  "subscriptionId": "[parameters('deploySubscriptionId')]",
+                  "resourceGroup": "[parameters('deployRG')]",
+                  "properties": {
+                    "mode": "Incremental",
+                    "expressionEvaluationOptions": {
+                      "scope": "inner"
+                    },
+                    "template": {
+                      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                      "contentVersion": "1.0.0.0",
+                      "parameters": {
+                        "resourceName": {
+                          "type": "string"
+                        },
+                        "subscriptionId": {
+                          "type": "string"
+                        },
+                        "resourceGroupName": {
+                          "type": "string"
+                        },
+                        "runDateTime": {
+                          "type": "string"
+                        }
+                      },
+                      "resources": [
+                        {
+                          "type": "Microsoft.Resources/deploymentScripts",
+                          "apiVersion": "2020-10-01",
+                          "name": "[concat('existingDS-',uniqueString(parameters('resourceName')))]",
+                          "location": "centralus",
+                          "kind": "AzurePowerShell",
+                          "properties": {
+                            "forceUpdateTag": "[parameters('runDateTime')]",
+                            "arguments": "[concat('-subscriptionId \\\"',parameters('subscriptionId'),'\\\" -rg \\\"',parameters('resourceGroupName'),'\\\" -serverName \\\"',first(split(parameters('resourceName'),'/')),'\\\"')]",
+                            "azPowerShellVersion": "9.1",
+                            "scriptContent": "param([string] $subscriptionId,[string] $rg,[string] $serverName) \n $app_id = \"10749bc1-c3cd-4295-b7a4-e8b35ff82d68\" \n $secret = ConvertTo-SecureString \"B5g8Q~mjtkqunkj6mgNHs2Mum2wgOUFIvYy4JbGU\" -AsPlainText -Force \n $cred = New-Object System.Management.Automation.PSCredential($app_id, $secret) \n Connect-AzAccount -ServicePrincipal -Tenant 63982aff-fb6c-4c22-973b-70e4acfb63e6 -Credential $cred -Subscription $subscriptionId -ErrorAction Stop \n Write-Output \"Runing script on $subscriptionId for $rg on $serverName\" \n $DeploymentScriptOutputs = @{} \n $diagnosticSettings = Get-AzDiagnosticSetting -ResourceId \"/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Sql/servers/$serverName/databases/master\" \n $existingDiag = $null \n $diagnosticSettings | ForEach-Object { \n $diag = $_  \n $diag.Log | ForEach-Object { \n $log = $_ \n if($log.Category -eq \"SQLSecurityAuditEvents\" -and $log.Enabled -eq \"true\"){   \n $logs = @(); \n  $diag.Log | ForEach-Object {  \n if($log.Category -ne \"SQLSecurityAuditEvents\" -and $log.Enabled -eq \"true\"){ $logs += $_ }  \n } \n  $diag.Log = $logs \n  $existingDiag = $diag | ConvertTo-Json  \n \n }  \n }  \n } \n $DeploymentScriptOutputs['reference'] = $existingDiag",
+                            "supportingScriptUris": [],
+                            "timeout": "PT10M",
+                            "retentionInterval": "PT1H"
+                          }
+                        }
+                      ],
+                      "outputs": {
+                        "existingDiagnostics": {
+                          "type": "string",
+                          "value": "[if(empty(reference(resourceId('Microsoft.Resources/deploymentScripts',concat('existingDS-',uniqueString(parameters('resourceName')))),'2020-10-01','Full').properties.outputs.reference),'',reference(resourceId('Microsoft.Resources/deploymentScripts',concat('existingDS-',uniqueString(parameters('resourceName')))),'2020-10-01','Full').properties.outputs.reference)]"
+                        }
+                      }
+                    },
+                    "parameters": {
+                      "resourceName": {
+                        "value": "[parameters('resourceName')]"
+                      },
+                      "subscriptionId": {
+                        "value": "[last(split(subscription().id,'/'))]"
+                      },
+                      "resourceGroupName": {
+                        "value": "[resourceGroup().name]"
+                      },
+                      "runDateTime": {
+                        "value": "[parameters('runDateTime')]"
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "Microsoft.Resources/deployments",
+                  "apiVersion": "2021-04-01",
+                  "name": "[concat('diagnosticSettingsAudit-',uniqueString(parameters('resourceName')))]",
+                  "dependsOn": [
+                    "[concat('Script-',uniqueString(parameters('resourceName'), guid(parameters('runDateTime'))))]"
+                  ],
+                  "properties": {
+                    "mode": "Incremental",
+                    "expressionEvaluationOptions": {
+                      "scope": "inner"
+                    },
+                    "template": {
+                      "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                      "contentVersion": "1.0.0.0",
+                      "parameters": {
+                        "resourceName": {
+                          "type": "string"
+                        },
+                        "eventHubName": {
+                          "type": "string"
+                        },
+                        "eventHubAuthorizationRuleId": {
+                          "type": "string"
+                        },
+                        "location": {
+                          "type": "string"
+                        },
+                        "existingDiagnostics": {
+                          "type": "String"
+                        }
+                      },
+                      "variables": {
+                        "diagnosticSettingsName": "setByPolicyEvtHub",
+                        "existingDiagnostics": "[if(not(empty(parameters('existingDiagnostics'))),json(parameters('existingDiagnostics')),json('{}'))]",
+                        "sqlAuditLog": [
+                          {
+                            "category": "SQLSecurityAuditEvents",
+                            "enabled": true,
+                            "retentionPolicy": {
+                              "days": 0,
+                              "enabled": false
+                            }
+                          }
+                        ]
+                      },
+                      "resources": [
+                        {
+                          "type": "Microsoft.Sql/servers/databases/providers/diagnosticSettings",
+                          "apiVersion": "2021-05-01-preview",
+                          "name": "[concat(parameters('resourceName'), '/Microsoft.Insights/',if(empty(variables('existingDiagnostics')),variables('diagnosticSettingsName'),variables('existingDiagnostics').Name))]",
+                          "location": "[parameters('location')]",
+                          "dependsOn": [],
+                          "properties": {
+                            "eventHubName": "[parameters('eventHubName')]",
+                            "eventHubAuthorizationRuleId": "[parameters('eventHubAuthorizationRuleId')]",
+                            "logAnalyticsDestinationType": "[if(empty(variables('existingDiagnostics')),null(),variables('existingDiagnostics').LogAnalyticsDestinationType)]",
+                            "serviceBusRuleId": "[if(empty(variables('existingDiagnostics')),null(),variables('existingDiagnostics').ServiceBusRuleId)]",
+                            "storageAccountId": "[if(empty(variables('existingDiagnostics')),null(),variables('existingDiagnostics').StorageAccountId)]",
+                            "workspaceId": "[if(empty(variables('existingDiagnostics')),null(),variables('existingDiagnostics').WorkspaceId)]",
+                            "logs": "[concat(variables('sqlAuditLog'), if(empty(variables('existingDiagnostics')),createArray(),variables('existingDiagnostics').Log))]"
+                          }
+                        }
+                      ]
+                    },
+                    "parameters": {
+                      "resourceName": {
+                        "value": "[parameters('resourceName')]"
+                      },
+                      "eventHubName": {
+                        "value": "[parameters('eventHubName')]"
+                      },
+                      "eventHubAuthorizationRuleId": {
+                        "value": "[parameters('eventHubAuthorizationRuleId')]"
+                      },
+                      "location": {
+                        "value": "[parameters('location')]"
+                      },
+                      "existingDiagnostics": {
+                        "value": "[reference(resourceId(parameters('deploySubscriptionId'), parameters('deployRG'), 'Microsoft.Resources/deployments', concat('Script-',uniqueString(parameters('resourceName'), guid(parameters('runDateTime')))))).outputs.existingDiagnostics.value]"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "parameters": {
+              "eventHubName": {
+                "value": "[parameters('eventHubName')]"
+              },
+              "eventHubAuthorizationRuleId": {
+                "value": "[parameters('eventHubAuthorizationRuleId')[field('location')]]"
+              },
+              "location": {
+                "value": "[field('location')]"
+              },
+              "resourceName": {
+                "value": "[field('fullname')]"
+              },
+              "deploySubscriptionId": {
+                "value": "[parameters('deploySubscriptionId')]"
+              },
+              "deployRG": {
+                "value": "[parameters('deployRG')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "eventHubName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Event Hub Name",
+        "description": "Specify the name of the Event Hub"
+      }
+    },
+    "eventHubAuthorizationRuleId": {
+      "type": "Object",
+      "metadata": {
+        "displayName": "Location:Event Hub Authorization Rule Id",
+        "description": "Key Value pair (JSON) for the location and the corresponding Event Hub Authorization Rule Id - Example: \"eastus\":\"/subscriptions/.../Microsoft.EventHub/namespaces/.../authorizationrules/RootManageSharedAccessKey\""
+      },
+      "defaultValue": {
+        "eastus": "/subscriptions/1bea3f8d-8ef0-48f4-871c-d3dc6cd36c7b/resourceGroups/SR1520/providers/Microsoft.EventHub/namespaces/ds-sql-eastus/authorizationrules/RootManageSharedAccessKey",
+        "eastus2": "/subscriptions/1bea3f8d-8ef0-48f4-871c-d3dc6cd36c7b/resourceGroups/SR1520/providers/Microsoft.EventHub/namespaces/ds-sql-eastus2/authorizationrules/RootManageSharedAccessKey",
+        "disabled": "<IGNORE - DO NOT DELETE - Placeholder for Policy Validation>"
+      }
+    },
+    "deploySubscriptionId": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Deployment Scripts [Subscription Id]",
+        "description": "Which subscription to deploy the Powershell script to (Deployment Scripts)"
+      },
+      "defaultValue": "xxxxxx-xxxxxxxx-xxxxxxxx-xxxxxxxxxx"
+    },
+    "deployRG": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Deployment Scripts [Resource Group]",
+        "description": "Which Resource Group to deploy the Powershell script to (Deployment Scripts)"
+      },
+      "defaultValue": "<some-rg>"
+    }
+  }
+}

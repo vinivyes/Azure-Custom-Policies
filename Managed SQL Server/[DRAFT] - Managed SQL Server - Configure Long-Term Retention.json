@@ -1,0 +1,138 @@
+{
+      "mode": "Indexed",
+      "policyRule": {
+        "if": {
+          "field": "type",
+          "equals": "Microsoft.Sql/managedInstances/databases"
+        },
+        "then": {
+          "effect": "[parameters('effect')]",
+          "details": {
+            "type": "Microsoft.Sql/managedInstances/databases/backupLongTermRetentionPolicies",
+            "name": "default",
+            "evaluationDelay": "AfterProvisioningSuccess",
+            "roleDefinitionIds": [
+              "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+            ],
+            "existenceCondition": {
+              "allOf": [
+                {
+                  "field": "Microsoft.Sql/managedInstances/databases/backupLongTermRetentionPolicies/weeklyRetention",
+                  "equals": "[parameters('weeklyRetention')]"
+                },
+                {
+                  "field": "Microsoft.Sql/managedInstances/databases/backupLongTermRetentionPolicies/monthlyRetention",
+                  "equals": "[parameters('monthlyRetention')]"
+                },
+                {
+                  "field": "Microsoft.Sql/managedInstances/databases/backupLongTermRetentionPolicies/yearlyRetention",
+                  "equals": "[parameters('yearlyRetention')]"
+                },
+                {
+                  "field": "Microsoft.Sql/managedInstances/databases/backupLongTermRetentionPolicies/weekOfYear",
+                  "equals": "[parameters('yearlyRetentionWeekOfYear')]"
+                }
+              ]
+            },
+            "deployment": {
+              "properties": {
+                "mode": "incremental",
+                "template": {
+                  "$schema": "http://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "resourceName": {
+                      "type": "String"
+                    },
+                    "weeklyRetention": {
+                      "type": "String"
+                    },
+                    "monthlyRetention": {
+                      "type": "String"
+                    },
+                    "yearlyRetention": {
+                      "type": "String"
+                    },
+                    "yearlyRetentionWeekOfYear": {
+                      "type": "Int"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Sql/managedInstances/databases/backupLongTermRetentionPolicies",
+                      "apiVersion": "2018-06-01-preview",
+                      "name": "[concat(parameters('resourceName'),'/default')]",
+                      "properties": {
+                        "weeklyRetention": "[parameters('weeklyRetention')]",
+                        "monthlyRetention": "[parameters('monthlyRetention')]",
+                        "yearlyRetention": "[parameters('yearlyRetention')]",
+                        "weekOfYear": "[parameters('yearlyRetentionWeekOfYear')]"
+                      }
+                    }
+                  ]
+                },
+                "parameters": {
+                  "resourceName": {
+                    "value": "[field('fullName')]"
+                  },
+                  "weeklyRetention": {
+                    "value": "[parameters('weeklyRetention')]"
+                  },
+                  "monthlyRetention": {
+                    "value": "[parameters('monthlyRetention')]"
+                  },
+                  "yearlyRetention": {
+                    "value": "[parameters('yearlyRetention')]"
+                  },
+                  "yearlyRetentionWeekOfYear": {
+                    "value": "[parameters('yearlyRetentionWeekOfYear')]"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": {
+        "weeklyRetention": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Weekly LTR (Duration)",
+            "description": "An ISO 8601 Duration for how long weekly backups should be held. (Example: P1W)"
+          }
+        },
+        "monthlyRetention": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Monthly LTR (Duration)",
+            "description": "An ISO 8601 Duration for how long monthly backups should be held. (Example: P1M)"
+          }
+        },
+        "yearlyRetention": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Yearly LTR (Duration)",
+            "description": "An ISO 8601 Duration for how long yearly backups should be held. (Example: P1Y)"
+          }
+        },
+        "yearlyRetentionWeekOfYear": {
+          "type": "Integer",
+          "metadata": {
+            "displayName": "Week of year to keep - Yearly LTR",
+            "description": "The number of which week of the year to keep. (Example: 1)"
+          }
+        },
+        "effect": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Effect",
+            "description": "Enable or disable the execution of the policy"
+          },
+          "allowedValues": [
+            "DeployIfNotExists",
+            "Disabled"
+          ],
+          "defaultValue": "DeployIfNotExists"
+        }
+      }
+    }

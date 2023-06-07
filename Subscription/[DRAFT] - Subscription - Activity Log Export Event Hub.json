@@ -1,0 +1,137 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "field": "type",
+      "equals": "microsoft.resources/subscriptions"
+    },
+    "then": {
+      "effect": "deployIfNotExists",
+      "details": {
+        "type": "Microsoft.Insights/diagnosticSettings",
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+              "equals": true
+            },
+            {
+              "field": "Microsoft.Insights/diagnosticSettings/eventHubName",
+              "equals": "[parameters('eventHubName')]"
+            },
+            {
+              "field": "Microsoft.Insights/diagnosticSettings/eventHubAuthorizationRuleId",
+              "matchInsensitively": "[parameters('eventHubAuthorizationRuleId')]"
+            }
+          ]
+        },
+        "deploymentScope": "subscription",
+        "deployment": {
+          "location": "eastus2",
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "diagnosticSettingsName": {
+                  "type": "string"
+                },
+                "eventHubAuthorizationRuleId": {
+                  "type": "string"
+                },
+                "eventHubName": {
+                  "type": "string"
+                }
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Insights/diagnosticSettings",
+                  "name": "[parameters('diagnosticSettingsName')]",
+                  "apiVersion": "2021-05-01-preview",
+                  "location": "global",
+                  "properties": {
+                    "logs": [
+                      {
+                        "category": "Administrative",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Security",
+                        "enabled": true
+                      },
+                      {
+                        "category": "ServiceHealth",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Alert",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Recommendation",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Policy",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Autoscale",
+                        "enabled": true
+                      },
+                      {
+                        "category": "ResourceHealth",
+                        "enabled": true
+                      }
+                    ],
+                    "eventHubName": "[parameters('eventHubName')]",
+                    "eventHubAuthorizationRuleId": "[parameters('eventHubAuthorizationRuleId')]"
+                  }
+                }
+              ]
+            },
+            "parameters": {
+              "diagnosticSettingsName": {
+                "value": "[parameters('diagnosticSettingsName')]"
+              },
+              "eventHubAuthorizationRuleId": {
+                "value": "[parameters('eventHubAuthorizationRuleId')]"
+              },
+              "eventHubName": {
+                "value": "[parameters('eventHubName')]"
+              }
+            }
+          }
+        },
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+        ]
+      }
+    }
+  },
+  "parameters": {
+    "eventHubName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Event Hub Name",
+        "description": "Specify the name of the Event Hub"
+      }
+    },
+    "eventHubAuthorizationRuleId": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Event Hub Authorization Rule Id",
+        "description": null
+      }
+    },
+    "diagnosticSettingsName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Name of the Diagnostic Settings",
+        "description": null
+      },
+      "defaultValue": "setByPolicy"
+    }
+  }
+}

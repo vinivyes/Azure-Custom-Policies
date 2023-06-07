@@ -1,0 +1,37 @@
+{
+      "mode": "All",
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.KeyVault/vaults"
+                        },
+                        {
+                              "not": {
+                                    "field": "name",
+                                    "in": "[parameters('allowedKeyVaultNames')]"
+                              }
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "deny"
+            }
+      },
+      "parameters": {
+            "allowedKeyVaultNames": {
+                  "type": "Array",
+                  "metadata": {
+                        "displayName": "Allowed Key Vault Names",
+                        "description": "List of allowed Key Vault names to be created"
+                  }
+            }
+      },
+      "metadata": {
+            "category": "Key Vault",
+            "displayName": "Deny creation of non-whitelisted Key Vaults",
+            "description": "This policy blocks the creation of Key Vaults, except for those with names specified in the whitelist.",
+            "version": "1.0.0"
+      }
+}

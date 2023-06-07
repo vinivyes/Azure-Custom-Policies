@@ -1,0 +1,33 @@
+{
+      "mode": "All",
+      "policyRule": {
+            "if": {
+                  "field": "type",
+                  "equals": "Microsoft.Sql/servers"
+            },
+            "then": {
+                  "effect": "[parameters('effect')]",
+                  "details": {
+                        "type": "Microsoft.Sql/servers/devOpsAuditingSettings",
+                        "existenceCondition": {
+                              "field": "Microsoft.Sql/servers/devOpsAuditingSettings/state",
+                              "equals": "Enabled"
+                        }
+                  }
+            }
+      },
+      "parameters": {
+            "effect": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Effect",
+                        "description": "Enable or disable the execution of the policy"
+                  },
+                  "allowedValues": [
+                        "AuditIfNotExists",
+                        "Disabled"
+                  ],
+                  "defaultValue": "AuditIfNotExists"
+            }
+      }
+}

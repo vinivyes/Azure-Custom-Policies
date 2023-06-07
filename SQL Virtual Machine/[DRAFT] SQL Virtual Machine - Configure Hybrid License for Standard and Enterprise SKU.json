@@ -1,0 +1,174 @@
+{
+      "mode": "Indexed",
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.SqlVirtualMachine/sqlVirtualMachines"
+            }
+          ]
+        },
+        "then": {
+          "effect": "deployIfNotExists",
+          "details": {
+            "type": "Microsoft.SqlVirtualMachine/sqlVirtualMachines",
+            "name": "[field('name')]",
+            "roleDefinitionIds": [
+              "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+            ],
+            "evaluationDelay": "AfterProvisioningSuccess",
+            "existenceCondition": {
+              "anyOf": [
+                {
+                  "field": "Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlServerLicenseType",
+                  "equals": "AHUB"
+                },
+                {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlImageSku",
+                      "notEquals": ""
+                    },
+                    {
+                      "not": {
+                        "field": "Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlImageSku",
+                        "in": [
+                          "Standard",
+                          "Enterprise"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "deployment": {
+              "properties": {
+                "mode": "incremental",
+                "template": {
+                  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "sqlServerName": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "virtualMachineResourceId": {
+                      "type": "string"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2021-04-01",
+                      "name": "[concat(parameters('sqlServerName'),'-sku-ref')]",
+                      "properties": {
+                        "mode": "Incremental",
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "parameters": {
+                            "sqlServerName": {
+                              "type": "String"
+                            }
+                          },
+                          "resources": [],
+                          "outputs": {
+                            "sqlServerSku": {
+                              "type": "string",
+                              "value": "[reference(resourceId('Microsoft.SqlVirtualMachine/sqlVirtualMachines',parameters('sqlServerName')),'2022-02-01','Full').properties.sqlImageSku]"
+                            }
+                          }
+                        },
+                        "parameters": {
+                          "sqlServerName": {
+                            "value": "[parameters('sqlServerName')]"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2021-04-01",
+                      "name": "[concat(parameters('sqlServerName'),'-validate-license')]",
+                      "dependsOn": [
+                        "[resourceId('Microsoft.Resources/deployments',concat(parameters('sqlServerName'),'-sku-ref'))]"
+                      ],
+                      "properties": {
+                        "mode": "Incremental",
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "parameters": {
+                            "sqlServerName": {
+                              "type": "String"
+                            },
+                            "sqlServerSku": {
+                              "type": "string"
+                            },
+                            "location": {
+                              "type": "string"
+                            },
+                            "virtualMachineResourceId": {
+                              "type": "string"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "type": "Microsoft.SqlVirtualMachine/sqlVirtualMachines",
+                              "name": "[parameters('sqlServerName')]",
+                              "apiVersion": "2022-02-01",
+                              "condition": "[contains(createArray('Standard','Enterprise'),parameters('sqlServerSku'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "virtualMachineResourceId": "[parameters('virtualMachineResourceId')]",
+                                "sqlServerLicenseType": "AHUB"
+                              }
+                            }
+                          ]
+                        },
+                        "parameters": {
+                          "sqlServerName": {
+                            "value": "[parameters('sqlServerName')]"
+                          },
+                          "sqlServerSku": {
+                            "value": "[reference(resourceId('Microsoft.Resources/deployments',concat(parameters('sqlServerName'),'-sku-ref')), '2021-04-01', 'Full').properties.outputs.sqlServerSku.value]"
+                          },
+                          "location": {
+                            "value": "[parameters('location')]"
+                          },
+                          "virtualMachineResourceId": {
+                            "value": "[parameters('virtualMachineResourceId')]"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "parameters": {
+                  "sqlServerName": {
+                    "value": "[field('name')]"
+                  },
+                  "location": {
+                    "value": "[field('location')]"
+                  },
+                  "virtualMachineResourceId": {
+                    "value": "[field('Microsoft.SqlVirtualMachine/SqlVirtualMachines/virtualMachineResourceId')]"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": {}
+    }

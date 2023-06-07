@@ -1,0 +1,112 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "microsoft.compute/virtualmachines"
+        },
+        {
+          "count": {
+            "value": "[items(parameters('rgSKUs'))]",
+            "name": "itemsRG",
+            "where": {
+              "allOf": [
+                {
+                  "value": "[resourceGroup().name]",
+                  "equals": "[current('itemsRG').key]"
+                },
+                {
+                  "field": "microsoft.compute/virtualmachines/hardwareProfile.vmSize",
+                  "in": "[current('itemsRG').value]"
+                }
+              ]
+            }
+          },
+          "equals": 0
+        },
+        {
+          "count": {
+            "value": "[items(parameters('subSKUs'))]",
+            "name": "itemsSub",
+            "where": {
+              "allOf": [
+                {
+                  "value": "[subscription().subscriptionId]",
+                  "equals": "[current('itemsSub').key]"
+                },
+                {
+                  "field": "microsoft.compute/virtualmachines/hardwareProfile.vmSize",
+                  "in": "[current('itemsSub').value]"
+                }
+              ]
+            }
+          },
+          "equals": 0
+        },
+        {
+          "count": {
+            "value": "[parameters('tenantSKUs')]",
+            "name": "validTenantSKUs",
+            "where": {
+              "field": "microsoft.compute/virtualmachines/hardwareProfile.vmSize",
+              "equals": "[current('validTenantSKUs')]"
+            }
+          },
+          "equals": 0
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]"
+    }
+  },
+  "parameters": {
+    "tenantSKUs": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "tenantSKUs",
+        "description": null
+      },
+      "defaultValue": []
+    },
+    "subSKUs": {
+      "type": "Object",
+      "metadata": {
+        "displayName": "subSKUs",
+        "description": null
+      },
+      "defaultValue": {
+        "6e6feb18-4fff-4ecf-8ca8-0dc0c7506558": []
+      }
+    },
+    "rgSKUs": {
+      "type": "Object",
+      "metadata": {
+        "displayName": "rgSKUs",
+        "description": null
+      },
+      "defaultValue": {
+        "Singularity-Dev": [
+          "Standard_F1s"
+        ],
+        "Singularity-Dev2": [
+          "Standard_F2s"
+        ]
+      }
+    },
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy."
+      },
+      "allowedValues": [
+        "Audit",
+        "Disabled"
+      ],
+      "defaultValue": "Audit"
+    }
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "mode": "Indexed",
+  "parameters": {
+    "clientId": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Falcon API Client ID",
+        "description": "Falcon API Client ID"
+      }
+    },
+    "clientSecret": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Falcon API Secret",
+        "description": "Falcon API Secret"
+      }
+    }
+  },
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Compute/virtualMachines"
+        },
+        {
+          "anyOf": [
+            {
+              "field": "Microsoft.Compute/virtualMachines/osProfile.windowsConfiguration",
+              "exists": true
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType",
+              "like": "Windows*"
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "effect": "deployIfNotExists",
+      "details": {
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "name":"falcon-sensor-install-windows",
+        "roleDefinitionIds": [
+          "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+        ],
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.Compute/virtualMachines/extensions/type",
+              "equals": "CustomScriptExtension"
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachines/extensions/provisioningState",
+              "in": [
+                "Succeeded",
+                "Provisioning succeeded"
+              ]
+            }
+          ]
+        },
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "vmName": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "clientId": {
+                  "type": "securestring"
+                },
+                "clientSecret": {
+                  "type": "securestring"
+                }
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Compute/virtualMachines/extensions",
+                  "name": "[concat(parameters('vmName'),'/falcon-sensor-install-windows')]",
+                  "apiVersion": "2019-12-01",
+                  "location": "[parameters('location')]",
+                  "properties": {
+                    "publisher": "Microsoft.Compute",
+                    "type": "CustomScriptExtension",
+                    "typeHandlerVersion": "1.10",
+                    "autoUpgradeMinorVersion": true,
+                    "protectedSettings": {
+                      "fileUris": [
+                        "https://raw.githubusercontent.com/CrowdStrike/falcon-scripts/main/powershell/install/falcon_windows_install.ps1"
+                      ],
+                      "commandToExecute": "[concat('falcon_windows_install.ps1 -FalconClientId ', parameters('clientId'), ' -FalconClientSecret', parameters('clientSecret'))]"
+                    }
+                  }
+                }
+              ]
+            },
+            "parameters": {
+              "vmName": {
+                "value": "[field('name')]"
+              },
+              "location": {
+                "value": "[field('location')]"
+              },
+              "clientId": {
+                "value": "[parameters('clientId')]"
+              },
+              "clientSecret": {
+                "value": "[parameters('clientSecret')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "anyOf":[
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Network/networkSecurityGroups"
+            },
+            {
+              "count": {
+                "field": "Microsoft.Network/networkSecurityGroups/securityRules[*]",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].access",
+                      "equals": "Allow"
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                          "equals": "*"
+                        },
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                          "equals": "Internet"
+                        }
+                      ]
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange",
+                          "in": "[parameters('blockedPorts')]"
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange",
+                              "equals": "*"
+                            },
+                            {
+                              "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].direction",
+                              "equals": "Inbound"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "greater": 0
+            }
+          ]
+        },
+        {
+          "field": "type",
+          "equals": "Microsoft.Network/networkSecurityGroups/securityRules"
+        }
+      ]
+    },
+    "then": {
+      "effect": "deny"
+    }
+  },
+  "parameters": {
+    "blockedPorts": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "blockedPorts",
+        "description": null
+      },
+      "defaultValue": [
+        "22",
+        "3389"
+      ]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+      "mode": "Indexed",
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.Compute/virtualMachines"
+                        },
+                        {
+                              "anyOf": [
+                                    {
+                                          "not": {
+                                                "field": "[concat('tags.', parameters('tagName'))]",
+                                                "exists": "true"
+                                          }
+                                    },
+                                    {
+                                          "field": "tags.Owner",
+                                          "notLike": "[concat('*',parameters('suffix'))]"
+                                    }
+                              ]
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "deny"
+            }
+      },
+      "parameters": {
+            "tagName": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Tag Name",
+                        "description": "The name of the tag to enforce"
+                  },
+                  "defaultValue": "Owner"
+            },
+            "suffix": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Suffix Required",
+                        "description": "Suffix that should be required on Owner Tag - such as @example.com"
+                  },
+                  "defaultValue": "@veritas.com"
+            }
+      }
+}

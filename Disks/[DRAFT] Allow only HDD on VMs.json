@@ -1,0 +1,65 @@
+{
+    "mode": "Indexed",
+    "policyRule": {
+        "if": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Compute/disks"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "Microsoft.Compute/disks/sku.name",
+                                    "contains": "Premium"
+                                },
+                                {
+                                    "field": "Microsoft.Compute/disks/sku.tier",
+                                    "contains": "Premium"
+                                },
+																{
+                                    "field": "Microsoft.Compute/disks/sku.name",
+                                    "contains": "StandardSSD"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "field": "type",
+                            "equals": "Microsoft.Compute/virtualMachines"
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "field": "Microsoft.Compute/virtualMachines/storageProfile.osDisk.managedDisk.storageAccountType",
+                                    "contains": "Premium"
+                                },
+                                {
+                                    "field": "Microsoft.Compute/virtualMachines/storageProfile.dataDisks[*].managedDisk.storageAccountType",
+                                    "contains": "Premium"
+                                },
+                                {
+                                    "field": "Microsoft.Compute/virtualMachines/storageProfile.osDisk.managedDisk.storageAccountType",
+                                    "contains": "StandardSSD"
+                                },
+                                {
+                                    "field": "Microsoft.Compute/virtualMachines/storageProfile.dataDisks[*].managedDisk.storageAccountType",
+                                    "contains": "StandardSSD"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "then": {
+            "effect": "deny"
+        }
+    },
+    "parameters": {}
+}

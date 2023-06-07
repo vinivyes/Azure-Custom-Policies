@@ -1,0 +1,42 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "like": "Microsoft.EventGrid/*"
+        },
+        {
+          "count": {
+            "value": "[parameters('allowedEGTypes')]",
+            "name": "allowedType",
+            "where": {
+              "value": "[concat('Microsoft.EventGrid/', last(split(field('id'),'Microsoft.EventGrid/')))]",
+              "like": "[current('allowedType')]"
+            }
+          },
+          "equals": 0
+        }
+      ]
+    },
+    "then": {
+      "effect": "Deny"
+    }
+  },
+  "parameters": {
+    "allowedEGTypes": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Denied EventGrid types",
+        "description": "The list of EventGrid types that are denied to be deployed."
+      },
+      "defaultValue": [
+        "Microsoft.EventGrid/systemTopics/*",
+        "Microsoft.EventGrid/domains/*",
+        "Microsoft.EventGrid/topics/*",
+        "Microsoft.EventGrid/eventSubscriptions/*"
+      ]
+    }
+  }
+}

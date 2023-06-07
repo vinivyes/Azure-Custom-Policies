@@ -1,0 +1,56 @@
+{
+      "mode": "All",
+      "parameters": {
+            "i01-pc39-vm-max-disk-size": {
+                  "type": "Integer",
+                  "metadata": {
+                        "displayName": "i01-pc39-vm-max-disk-size"
+                  },
+                  "defaultValue": 1024
+            },
+            "i01-pc39-vm-min-disk-size": {
+                  "type": "Integer",
+                  "metadata": {
+                        "displayName": "i01-pc39-vm-min-disk-size"
+                  },
+                  "defaultValue": 4
+            }
+      },
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "equals": "Microsoft.Compute/disks",
+                              "field": "type"
+                        },
+                        {
+                              "equals": "Microsoft.Compute/disks/diskSizeGB",
+                              "exists": true
+                        },
+                        {
+                              "equals": "Microsoft.Compute/disks/diskSizeGB",
+                              "notEquals": null
+                        },
+                        {
+                              "anyOf": [
+                                    {
+                                          "not": {
+                                                "field": "Microsoft.Compute/disks/diskSizeGB",
+                                                "greater": "[parameters('i01-pc39-vm-min-disk-size')]"
+                                          }
+                                    },
+                                    {
+                                          "not": {
+                                                "field": "Microsoft.Compute/disks/diskSizeGB",
+                                                "lessOrEquals": "[parameters('i01-pc39-vm-max-disk-size')]"
+                                          }
+                                    }
+                              ]
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "deny"
+            }
+      }
+}

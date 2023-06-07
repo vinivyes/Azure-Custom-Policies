@@ -1,0 +1,251 @@
+{
+      "mode": "All",
+      "policyRule": {
+        "if": {
+          "field": "type",
+          "equals": "microsoft.resources/subscriptions"
+        },
+        "then": {
+          "effect": "deployIfNotExists",
+          "details": {
+            "type": "Microsoft.Security/automations",
+            "existenceCondition": {
+              "allOf": [
+                {
+                  "count": {
+                    "field": "Microsoft.Security/automations/sources[*]",
+                    "where": {
+                      "allOf": [
+                        {
+                          "field": "Microsoft.Security/automations/sources[*].eventSource",
+                          "equals": "Alerts"
+                        },
+                        {
+                          "count": {
+                            "field": "Microsoft.Security/automations/sources[*].ruleSets[*]",
+                            "where": {
+                              "count": {
+                                "field": "Microsoft.Security/automations/sources[*].ruleSets[*].rules[*]",
+                                "where": {
+                                  "field": "Microsoft.Security/automations/sources[*].ruleSets[*].rules[*].expectedValue",
+                                  "in": "[parameters('ruleSets')]"
+                                }
+                              },
+                              "greater": 0
+                            }
+                          },
+                          "equals": 4
+                        }
+                      ]
+                    }
+                  },
+                  "greater": 0
+                },
+                {
+                  "field": "Microsoft.Security/automations/isEnabled",
+                  "equals": true
+                }
+              ]
+            },
+            "deploymentScope": "subscription",
+            "deployment": {
+              "location": "eastus",
+              "properties": {
+                "mode": "incremental",
+                "template": {
+                  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "ruleStoreLocation": {
+                      "type": "String"
+                    },
+                    "subscriptionId": {
+                      "type": "String"
+                    },
+                    "eventHubResourceIdAuthorizationId": {
+                      "type": "String"
+                    },
+                    "eventHubResourceId": {
+                      "type": "String"
+                    }
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2021-04-01",
+                      "name": "ConfigureContinuosExport",
+                      "properties": {
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "mode": "incremental",
+                        "parameters": {
+                          "ruleStoreLocation": {
+                            "value": "[parameters('ruleStoreLocation')]"
+                          },
+                          "subscriptionId": {
+                            "value": "[parameters('subscriptionId')]"
+                          },
+                          "eventHubResourceIdAuthorizationId": {
+                            "value": "[parameters('eventHubResourceIdAuthorizationId')]"
+                          },
+                          "eventHubResourceIdConnectionString": {
+                            "value": "[listKeys(parameters('eventHubResourceIdAuthorizationId'),'2021-11-01').primaryConnectionString]"
+                          },
+                          "eventHubResourceId": {
+                            "value": "[parameters('eventHubResourceId')]"
+                          }
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "parameters": {
+                            "ruleStoreLocation": {
+                              "type": "String"
+                            },
+                            "subscriptionId": {
+                              "type": "String"
+                            },
+                            "eventHubResourceIdAuthorizationId": {
+                              "type": "String"
+                            },
+                            "eventHubResourceIdConnectionString": {
+                              "type": "String"
+                            },
+                            "eventHubResourceId": {
+                              "type": "String"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "name": "exportToEventHub",
+                              "type": "Microsoft.Security/automations",
+                              "apiVersion": "2019-01-01-preview",
+                              "location": "[parameters('ruleStoreLocation')]",
+                              "properties": {
+                                "description": "",
+                                "isEnabled": true,
+                                "actions": [
+                                  {
+                                    "actionType": "EventHub",
+                                    "connectionString": "[parameters('eventHubResourceIdConnectionString')]",
+                                    "eventHubResourceId": "[parameters('eventHubResourceId')]"
+                                  }
+                                ],
+                                "scopes": [
+                                  {
+                                    "description": "Added scope by Policy",
+                                    "scopePath": "[parameters('subscriptionId')]"
+                                  }
+                                ],
+                                "sources": [
+                                  {
+                                    "eventSource": "Alerts",
+                                    "eventVersionType": "Standard",
+                                    "ruleSets": [
+                                      {
+                                        "rules": [
+                                          {
+                                            "propertyJPath": "Severity",
+                                            "propertyType": "string",
+                                            "expectedValue": "low",
+                                            "operator": "Equals"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "rules": [
+                                          {
+                                            "propertyJPath": "Severity",
+                                            "propertyType": "string",
+                                            "expectedValue": "medium",
+                                            "operator": "Equals"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "rules": [
+                                          {
+                                            "propertyJPath": "Severity",
+                                            "propertyType": "string",
+                                            "expectedValue": "high",
+                                            "operator": "Equals"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "rules": [
+                                          {
+                                            "propertyJPath": "Severity",
+                                            "propertyType": "string",
+                                            "expectedValue": "informational",
+                                            "operator": "Equals"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "resourceGroup": "[first(skip(split(parameters('eventHubResourceIdAuthorizationId'),'/'),4))]"
+                    }
+                  ]
+                },
+                "parameters": {
+                  "ruleStoreLocation": {
+                    "value": "[parameters('ruleStoreLocation')]"
+                  },
+                  "subscriptionId": {
+                    "value": "[field('id')]"
+                  },
+                  "eventHubResourceIdAuthorizationId": {
+                    "value": "[parameters('eventHubResourceIdAuthorizationId')]"
+                  },
+                  "eventHubResourceId": {
+                    "value": "[first(split(toLower(parameters('eventHubResourceIdAuthorizationId')),'/authorizationrules/'))]"
+                  }
+                }
+              }
+            },
+            "roleDefinitionIds": [
+              "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+            ]
+          }
+        }
+      },
+      "parameters": {
+        "ruleStoreLocation": {
+          "type": "String",
+          "metadata": {
+            "displayName": "ruleStoreLocation",
+            "description": "Which region will store the Event Hub Export Rule - This is irrelevant to the end result.",
+            "strongType": "location"
+          }
+        },
+        "eventHubResourceIdAuthorizationId": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Event Hub - Resource ID - Authorization Rule",
+            "description": "The Event Hub that will be connected to the Export and which Authorization Rule to use",
+            "strongType": "Microsoft.EventHub/Namespaces/EventHubs/AuthorizationRules"
+          }
+        },
+        "ruleSets": {
+          "type": "Array",
+          "metadata": {
+            "displayName": "Rule Set to evaluate and deploy",
+            "description": "Do not modify, this defines which rules should be enabled"
+          },
+          "defaultValue": [
+            "low",
+            "medium",
+            "high",
+            "informational"
+          ]
+        }
+      }
+    }

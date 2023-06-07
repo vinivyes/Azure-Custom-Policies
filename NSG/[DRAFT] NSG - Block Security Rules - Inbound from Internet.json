@@ -1,0 +1,128 @@
+    {
+        "properties": {
+            "displayName": "Custom - Allow Any Source Inbound NSG Rule",
+            "policyType": "Custom",
+            "mode": "All",
+            "description": "Prevent NSG rules that allow inbound traffic from *, Internet, AzureCloud.",
+            "metadata": {
+                "category": "network",
+                "createdBy": "a0939ac5-d37a-4d72-9af1-79c7de82c726",
+                "createdOn": "2022-02-16T20:10:21.1103499Z",
+                "managedBy": "terraform",
+                "resourceOwner": "secops",
+                "updatedBy": "a0939ac5-d37a-4d72-9af1-79c7de82c726",
+                "updatedOn": "2022-03-03T18:25:53.3064869Z"
+            },
+            "parameters": {
+                "effect": {
+                    "type": "String",
+                    "metadata": {
+                        "description": "The action taken by the policy.",
+                        "displayName": "effect"
+                    },
+                    "allowedValues": [
+                        "disabled",
+                        "audit",
+                        "deny"
+                    ],
+                    "defaultValue": "deny"
+                }
+            },
+            "policyRule": {
+                "if": {
+                    "allOf": [
+                        {
+                            "anyOf": [
+                                {
+                                    "equals": "Microsoft.Network/networkSecurityGroups/securityRules",
+                                    "field": "type"
+                                },
+                                {
+                                    "equals": "Microsoft.Network/networkSecurityGroups",
+                                    "field": "type"
+                                }
+                            ]
+                        },
+                        {
+                            "anyOf":[
+                                {
+                                    "allOf": [
+                                        {
+                                            "equals": "Allow",
+                                            "field": "Microsoft.Network/networkSecurityGroups/securityRules/access"
+                                        },
+                                        {
+                                            "equals": "Inbound",
+                                            "field": "Microsoft.Network/networkSecurityGroups/securityRules/direction"
+                                        },
+                                        {
+                                            "anyOf": [
+                                                {
+                                                    "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix",
+                                                    "in": [
+                                                        "*",
+                                                        "Internet",
+                                                        "AzureCloud"
+                                                    ]
+                                                },
+                                                {
+                                                    "not": {
+                                                        "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefixes[*]",
+                                                        "notIn": [
+                                                            "*",
+                                                            "Internet",
+                                                            "AzureCloud"
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "allOf": [
+                                        {
+                                            "equals": "Allow",
+                                            "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].access"
+                                        },
+                                        {
+                                            "equals": "Inbound",
+                                            "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].direction"
+                                        },
+                                        {
+                                            "anyOf": [
+                                                {
+                                                    "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                                                    "in": [
+                                                        "*",
+                                                        "Internet",
+                                                        "AzureCloud"
+                                                    ]
+                                                },
+                                                {
+                                                    "not": {
+                                                        "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefixes[*]",
+                                                        "notIn": [
+                                                            "*",
+                                                            "Internet",
+                                                            "AzureCloud"
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "then": {
+                    "effect": "[parameters('effect')]"
+                }
+            }
+        },
+        "id": "/subscriptions/d2f6570b-209f-4b43-b8e9-14e767a88fd0/providers/Microsoft.Authorization/policyDefinitions/Custom - Allow Any Source Inbound NSG Rule",
+        "type": "Microsoft.Authorization/policyDefinitions",
+        "name": "Custom - Allow Any Source Inbound NSG Rule"
+    }

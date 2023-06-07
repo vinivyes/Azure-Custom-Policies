@@ -1,0 +1,35 @@
+{
+    "mode": "Indexed",
+    "policyRule": {
+        "if": {
+            "allOf": [
+                {
+                    "field": "type",
+                    "equals": "Microsoft.StreamAnalytics/streamingjobs/inputs"
+                },
+                {
+                    "value": "[json(string(field('Microsoft.StreamAnalytics/streamingjobs/inputs/Stream.datasource'))).authenticationMode]",
+                    "equals": "ConnectionString"
+                }
+            ]
+        },
+        "then": {
+            "effect": "[parameters('effect')]"
+        }
+    },
+    "parameters": {
+        "effect": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Effect",
+                "description": "Enable or disable the execution of the policy"
+            },
+            "allowedValues": [
+                "Audit",
+                "Deny",
+                "Disabled"
+            ],
+            "defaultValue": "Deny"
+        }
+    }
+}

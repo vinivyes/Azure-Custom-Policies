@@ -1,0 +1,57 @@
+{
+    "mode": "Indexed",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Compute/virtualMachines/extensions"
+          },
+          {
+            "allOf": [
+              {
+                "field": "Microsoft.Compute/virtualMachines/extensions/type",
+                "notIn": "[parameters('approvedExtensionsTypes')]"
+              },
+              {
+                "value": "[string(last(split(string(field('id')),'/')))]",
+                "notIn": "[parameters('approvedExtensionsNames')]"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "The effect determines what happens when the policy rule is evaluated to match"
+        },
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Audit"
+      },
+      "approvedExtensionsTypes": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Approved extensions types",
+          "description": "The list of approved extension types that can be installed. Example: AzureDiskEncryption"
+        }
+      },
+      "approvedExtensionsNames": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Approved extensions names",
+          "description": "The list of approved extension names that can be installed. Example: DatabricksBootstrap"
+        }
+      }
+    }
+  }

@@ -1,0 +1,124 @@
+{
+      "mode": "All",
+      "policyRule": {
+            "if": {
+                  "allOf": [
+                        {
+                              "field": "type",
+                              "equals": "Microsoft.Insights/diagnosticSettings"
+                        },
+                        {
+                              "field": "id",
+                              "contains": "Microsoft.Storage/storageAccounts/"
+                        },
+                        {
+                              "field": "name",
+                              "equals": "[parameters('diagnosticsSettingNameToUse')]"
+                        },
+                        {
+                              "anyOf": [
+                                    {
+                                          "allOf": [
+                                                {
+                                                      "value": "[contains(parameters('servicesToDeploy'),'storageAccount')]",
+                                                      "equals": true
+                                                },
+                                                {
+                                                      "value": "[length(split(field('id'),'/'))]",
+                                                      "equals": 13
+                                                }
+                                          ]
+                                    },
+                                    {
+                                          "allOf": [
+                                                {
+                                                      "value": "[contains(parameters('servicesToDeploy'),'blobServices')]",
+                                                      "equals": true
+                                                },
+                                                {
+                                                      "field": "id",
+                                                      "contains": "/blobServices/default/"
+                                                }
+                                          ]
+                                    },
+                                    {
+                                          "allOf": [
+                                                {
+                                                      "value": "[contains(parameters('servicesToDeploy'),'tableServices')]",
+                                                      "equals": true
+                                                },
+                                                {
+                                                      "field": "id",
+                                                      "contains": "/tableServices/default/"
+                                                }
+                                          ]
+                                    },
+                                    {
+                                          "allOf": [
+                                                {
+                                                      "value": "[contains(parameters('servicesToDeploy'),'queueServices')]",
+                                                      "equals": true
+                                                },
+                                                {
+                                                      "field": "id",
+                                                      "contains": "/queueServices/default/"
+                                                }
+                                          ]
+                                    },
+                                    {
+                                          "allOf": [
+                                                {
+                                                      "value": "[contains(parameters('servicesToDeploy'),'fileServices')]",
+                                                      "equals": true
+                                                },
+                                                {
+                                                      "field": "id",
+                                                      "contains": "/fileServices/default/"
+                                                }
+                                          ]
+                                    }
+                              ]
+                        }
+                  ]
+            },
+            "then": {
+                  "effect": "DenyAction",
+                  "details": {
+                        "actionNames": [
+                              "delete"
+                        ]
+                  }
+            }
+      },
+      "parameters": {
+            "diagnosticsSettingNameToUse": {
+                  "type": "String",
+                  "metadata": {
+                        "displayName": "Setting name",
+                        "description": "Name of the diagnostic settings."
+                  },
+                  "defaultValue": "storageAccountsDiagnosticsLogsToLogAnalytics"
+            },
+            "servicesToDeploy": {
+                  "type": "Array",
+                  "metadata": {
+                        "displayName": "Storage services to deploy",
+                        "description": "List of Storage services to deploy"
+                  },
+                  "allowedValues": [
+                        "storageAccount",
+                        "blobServices",
+                        "fileServices",
+                        "tableServices",
+                        "queueServices"
+                  ],
+                  "defaultValue": [
+                        "storageAccount",
+                        "blobServices",
+                        "fileServices",
+                        "tableServices",
+                        "queueServices"
+                  ]
+            }
+      }
+}

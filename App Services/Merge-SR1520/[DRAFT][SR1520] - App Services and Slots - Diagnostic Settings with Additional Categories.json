@@ -1,0 +1,452 @@
+{
+      "mode": "All",
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "in": [
+                "Microsoft.Web/sites",
+                "Microsoft.Web/sites/slots"
+              ]
+            },
+            {
+              "field": "kind",
+              "notContains": "functionapp"
+            },
+            {
+              "count": {
+                "value": "[items(parameters('eventHubAuthorizationRuleId'))]",
+                "name": "locations",
+                "where": {
+                  "field": "location",
+                  "equals": "[current('locations').key]"
+                }
+              },
+              "greater": 0
+            }
+          ]
+        },
+        "then": {
+          "effect": "deployIfNotExists",
+          "details": {
+            "type": "Microsoft.Insights/diagnosticSettings",
+            "evaluationDelay": "AfterProvisioningSuccess",
+            "roleDefinitionIds": [
+              "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+            ],
+            "existenceCondition": {
+              "allOf": [
+                {
+                  "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+                  "equals": "True"
+                },
+                {
+                  "field": "Microsoft.Insights/diagnosticSettings/metrics.enabled",
+                  "equals": "False"
+                },
+                {
+                  "count": {
+                    "value": "[items(parameters('eventHubAuthorizationRuleId'))]",
+                    "name": "locations",
+                    "where": {
+                      "allOf": [
+                        {
+                          "field": "location",
+                          "equals": "[current('locations').key]"
+                        },
+                        {
+                          "field": "Microsoft.Insights/diagnosticSettings/eventHubAuthorizationRuleId",
+                          "matchInsensitively": "[current('locations').value]"
+                        }
+                      ]
+                    }
+                  },
+                  "greater": 0
+                },
+                {
+                  "field": "Microsoft.Insights/diagnosticSettings/eventHubName",
+                  "matchInsensitively": "[parameters('eventHubName')]"
+                }
+              ]
+            },
+            "deployment": {
+              "properties": {
+                "mode": "incremental",
+                "template": {
+                  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                  "contentVersion": "1.0.0.0",
+                  "parameters": {
+                    "diagnosticsSettingNameToUse": {
+                      "type": "String"
+                    },
+                    "resourceId": {
+                      "type": "String"
+                    },
+                    "resourceName": {
+                      "type": "String"
+                    },
+                    "resourceType": {
+                      "type": "String"
+                    },
+                    "eventHubName": {
+                      "type": "String"
+                    },
+                    "eventHubAuthorizationRuleId": {
+                      "type": "String"
+                    },
+                    "location": {
+                      "type": "String"
+                    }
+                  },
+                  "variables": {
+                    "categories": [
+                      {
+                        "category": "AppServiceHTTPLogs",
+                        "enabled": true
+                      },
+                      {
+                        "category": "AppServiceConsoleLogs",
+                        "enabled": true
+                      },
+                      {
+                        "category": "AppServiceAppLogs",
+                        "enabled": true
+                      },
+                      {
+                        "category": "AppServiceAuditLogs",
+                        "enabled": true
+                      },
+                      {
+                        "category": "AppServiceIPSecAuditLogs",
+                        "enabled": true
+                      },
+                      {
+                        "category": "AppServicePlatformLogs",
+                        "enabled": true
+                      }
+                    ],
+                    "additionalCategories": [
+                      {
+                        "category": "AppServiceAntivirusScanAuditLogs",
+                        "enabled": true
+                      },
+                      {
+                        "category": "AppServiceFileAuditLogs",
+                        "enabled": true
+                      }
+                    ]
+                  },
+                  "resources": [
+                    {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2021-04-01",
+                      "name": "[concat('getKind',uniqueString(parameters('resourceName')))]",
+                      "dependsOn": [],
+                      "properties": {
+                        "mode": "Incremental",
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "parameters": {
+                            "resourceId": {
+                              "type": "string"
+                            }
+                          },
+                          "resources": [],
+                          "outputs": {
+                            "resourceKind": {
+                              "type": "string",
+                              "value": "[reference(parameters('resourceId'),'2022-03-01').kind]"
+                            }
+                          }
+                        },
+                        "parameters": {
+                          "resourceId": {
+                            "value": "[parameters('resourceId')]"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2021-04-01",
+                      "name": "[concat('addCategories',uniqueString(parameters('resourceName')))]",
+                      "dependsOn": [
+                        "[concat('getKind',uniqueString(parameters('resourceName')))]"
+                      ],
+                      "properties": {
+                        "mode": "Incremental",
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "parameters": {
+                            "categories": {
+                              "type": "Array"
+                            },
+                            "diagnosticsSettingNameToUse": {
+                              "type": "string"
+                            },
+                            "resourceName": {
+                              "type": "string"
+                            },
+                            "resourceType": {
+                              "type": "string"
+                            },
+                            "eventHubName": {
+                              "type": "string"
+                            },
+                            "eventHubAuthorizationRuleId": {
+                              "type": "string"
+                            },
+                            "location": {
+                              "type": "string"
+                            },
+                            "resourceKind": {
+                              "type": "string"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "type": "Microsoft.Web/sites/providers/diagnosticSettings",
+                              "apiVersion": "2021-05-01-preview",
+                              "condition": "[and(not(contains(parameters('resourceKind'),'functionapp')),equals(parameters('resourceType'),'microsoft.web/sites'))]",
+                              "name": "[concat(if(equals(parameters('resourceType'),'microsoft.web/sites'),parameters('resourceName'),'null'), '/Microsoft.Insights/', parameters('diagnosticsSettingNameToUse'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "eventHubName": "[parameters('eventHubName')]",
+                                "eventHubAuthorizationRuleId": "[parameters('eventHubAuthorizationRuleId')]",
+                                "logs": "[parameters('categories')]",
+                                "metrics": [
+                                  {
+                                    "enabled": false
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "type": "Microsoft.Web/sites/slots/providers/diagnosticSettings",
+                              "apiVersion": "2021-05-01-preview",
+                              "condition": "[and(not(contains(parameters('resourceKind'),'functionapp')),equals(parameters('resourceType'),'microsoft.web/sites/slots'))]",
+                              "name": "[concat(if(equals(parameters('resourceType'),'microsoft.web/sites/slots'),parameters('resourceName'),'null/null'), '/Microsoft.Insights/', parameters('diagnosticsSettingNameToUse'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "eventHubName": "[parameters('eventHubName')]",
+                                "eventHubAuthorizationRuleId": "[parameters('eventHubAuthorizationRuleId')]",
+                                "logs": "[parameters('categories')]",
+                                "metrics": [
+                                  {
+                                    "enabled": false
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        },
+                        "parameters": {
+                          "categories": {
+                            "value": "[variables('categories')]"
+                          },
+                          "diagnosticsSettingNameToUse": {
+                            "value": "[parameters('diagnosticsSettingNameToUse')]"
+                          },
+                          "resourceName": {
+                            "value": "[parameters('resourceName')]"
+                          },
+                          "resourceType": {
+                            "value": "[toLower(parameters('resourceType'))]"
+                          },
+                          "eventHubName": {
+                            "value": "[parameters('eventHubName')]"
+                          },
+                          "eventHubAuthorizationRuleId": {
+                            "value": "[parameters('eventHubAuthorizationRuleId')]"
+                          },
+                          "location": {
+                            "value": "[parameters('location')]"
+                          },
+                          "resourceKind": {
+                            "value": "[toLower(reference(resourceId('Microsoft.Resources/deployments',concat('getKind',uniqueString(parameters('resourceName')))), '2021-04-01', 'Full').properties.outputs.resourceKind.value)]"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "type": "Microsoft.Resources/deployments",
+                      "apiVersion": "2021-04-01",
+                      "name": "[concat('suplementalCategories',uniqueString(parameters('resourceName')))]",
+                      "dependsOn": [
+                        "[concat('addCategories',uniqueString(parameters('resourceName')))]",
+                        "[concat('getKind',uniqueString(parameters('resourceName')))]"
+                      ],
+                      "properties": {
+                        "mode": "Incremental",
+                        "expressionEvaluationOptions": {
+                          "scope": "inner"
+                        },
+                        "template": {
+                          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                          "contentVersion": "1.0.0.0",
+                          "parameters": {
+                            "categories": {
+                              "type": "Array"
+                            },
+                            "additionalCategories": {
+                              "type": "Array"
+                            },
+                            "diagnosticsSettingNameToUse": {
+                              "type": "string"
+                            },
+                            "resourceName": {
+                              "type": "string"
+                            },
+                            "resourceType": {
+                              "type": "string"
+                            },
+                            "eventHubName": {
+                              "type": "string"
+                            },
+                            "eventHubAuthorizationRuleId": {
+                              "type": "string"
+                            },
+                            "location": {
+                              "type": "string"
+                            },
+                            "resourceKind": {
+                              "type": "string"
+                            }
+                          },
+                          "resources": [
+                            {
+                              "type": "Microsoft.Web/sites/providers/diagnosticSettings",
+                              "apiVersion": "2021-05-01-preview",
+                              "condition": "[and(not(contains(parameters('resourceKind'),'functionapp')),equals(parameters('resourceType'),'microsoft.web/sites'))]",
+                              "name": "[concat(if(equals(parameters('resourceType'),'microsoft.web/sites'),parameters('resourceName'),'null'), '/Microsoft.Insights/', parameters('diagnosticsSettingNameToUse'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "eventHubName": "[parameters('eventHubName')]",
+                                "eventHubAuthorizationRuleId": "[parameters('eventHubAuthorizationRuleId')]",
+                                "logs": "[concat(parameters('categories'),parameters('additionalCategories'))]",
+                                "metrics": [
+                                  {
+                                    "enabled": false
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "type": "Microsoft.Web/sites/slots/providers/diagnosticSettings",
+                              "apiVersion": "2021-05-01-preview",
+                              "condition": "[and(not(contains(parameters('resourceKind'),'functionapp')),equals(parameters('resourceType'),'microsoft.web/sites/slots'))]",
+                              "name": "[concat(if(equals(parameters('resourceType'),'microsoft.web/sites/slots'),parameters('resourceName'),'null/null'), '/Microsoft.Insights/', parameters('diagnosticsSettingNameToUse'))]",
+                              "location": "[parameters('location')]",
+                              "properties": {
+                                "eventHubName": "[parameters('eventHubName')]",
+                                "eventHubAuthorizationRuleId": "[parameters('eventHubAuthorizationRuleId')]",
+                                "logs": "[concat(parameters('categories'),parameters('additionalCategories'))]",
+                                "metrics": [
+                                  {
+                                    "enabled": false
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        },
+                        "parameters": {
+                          "categories": {
+                            "value": "[variables('categories')]"
+                          },
+                          "additionalCategories": {
+                            "value": "[variables('additionalCategories')]"
+                          },
+                          "diagnosticsSettingNameToUse": {
+                            "value": "[parameters('diagnosticsSettingNameToUse')]"
+                          },
+                          "resourceName": {
+                            "value": "[parameters('resourceName')]"
+                          },
+                          "resourceType": {
+                            "value": "[toLower(parameters('resourceType'))]"
+                          },
+                          "eventHubName": {
+                            "value": "[parameters('eventHubName')]"
+                          },
+                          "eventHubAuthorizationRuleId": {
+                            "value": "[parameters('eventHubAuthorizationRuleId')]"
+                          },
+                          "location": {
+                            "value": "[parameters('location')]"
+                          },
+                          "resourceKind": {
+                            "value": "[toLower(reference(resourceId('Microsoft.Resources/deployments',concat('getKind',uniqueString(parameters('resourceName')))), '2021-04-01', 'Full').properties.outputs.resourceKind.value)]"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "parameters": {
+                  "diagnosticsSettingNameToUse": {
+                    "value": "[parameters('diagnosticsSettingNameToUse')]"
+                  },
+                  "eventHubName": {
+                    "value": "[parameters('eventHubName')]"
+                  },
+                  "eventHubAuthorizationRuleId": {
+                    "value": "[parameters('eventHubAuthorizationRuleId')[field('location')]]"
+                  },
+                  "location": {
+                    "value": "[field('location')]"
+                  },
+                  "resourceType": {
+                    "value": "[field('type')]"
+                  },
+                  "resourceName": {
+                    "value": "[field('fullname')]"
+                  },
+                  "resourceId": {
+                    "value": "[field('id')]"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": {
+        "diagnosticsSettingNameToUse": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Setting name",
+            "description": "Name of the policy for the diagnostics settings."
+          },
+          "defaultValue": "setByPolicyEvtHub"
+        },
+        "eventHubName": {
+          "type": "String",
+          "metadata": {
+            "displayName": "Event Hub Name",
+            "description": "Specify the name of the Event Hub"
+          }
+        },
+        "eventHubAuthorizationRuleId": {
+          "type": "Object",
+          "metadata": {
+            "displayName": "Location:Event Hub Authorization Rule Id",
+            "description": "Key Value pair (JSON) for the location and the corresponding Event Hub Authorization Rule Id - Example: \"eastus\":\"/subscriptions/.../Microsoft.EventHub/namespaces/.../authorizationrules/RootManageSharedAccessKey\""
+          },
+          "defaultValue": {
+            "eastus": "/subscriptions/1bea3f8d-xxxx-48f4-xxxx-d3dc6cd36c7b/resourceGroups/SR1520/providers/Microsoft.EventHub/namespaces/ds-sql-eastus/authorizationrules/RootManageSharedAccessKey",
+            "eastus2": "/subscriptions/1bea3f8d-xxxx-48f4-xxxx-d3dc6cd36c7b/resourceGroups/SR1520/providers/Microsoft.EventHub/namespaces/ds-sql-eastus2/authorizationrules/RootManageSharedAccessKey",
+            "disabled": "<IGNORE - DO NOT DELETE - Placeholder for Policy Validation>"
+          }
+        }
+      }
+    }

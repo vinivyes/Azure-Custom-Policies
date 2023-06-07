@@ -1,0 +1,111 @@
+{
+    "mode": "All",
+    "policyRule": {
+      "if": {
+        "anyOf": [
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.StreamAnalytics/streamingjobs/outputs"
+              },
+              {
+                "anyOf": [
+                  {
+                    "allOf": [
+                      {
+                        "field": "Microsoft.StreamAnalytics/streamingjobs/outputs/datasource.type",
+                        "equals": "Microsoft.Storage/Blob"
+                      },
+                      {
+                        "field": "Microsoft.StreamAnalytics/streamingjobs/outputs/datasource.Microsoft-Storage-Blob.authenticationMode",
+                        "equals": "ConnectionString"
+                      }
+                    ]
+                  },
+                  {
+                    "allOf": [
+                      {
+                        "field": "Microsoft.StreamAnalytics/streamingjobs/outputs/datasource.type",
+                        "equals": "Microsoft.EventHub/EventHub"
+                      },
+                      {
+                        "field": "Microsoft.StreamAnalytics/streamingjobs/outputs/datasource.Microsoft-ServiceBus-EventHub.authenticationMode",
+                        "equals": "ConnectionString"
+                      }
+                    ]
+                  },
+                  {
+                    "allOf": [
+                      {
+                        "field": "Microsoft.StreamAnalytics/streamingjobs/outputs/datasource.type",
+                        "equals": "Microsoft.Sql/Server/Database"
+                      },
+                      {
+                        "field": "Microsoft.StreamAnalytics/streamingjobs/outputs/datasource.Microsoft-Sql-Server-Database.authenticationMode",
+                        "equals": "ConnectionString"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.StreamAnalytics/streamingjobs/inputs"
+              },
+              {
+                "anyOf": [
+                  {
+                    "allOf": [
+                      {
+                        "field": "Microsoft.StreamAnalytics/streamingjobs/inputs/Stream.datasource.type",
+                        "equals": "Microsoft.EventHub/EventHub"
+                      },
+                      {
+                        "field": "Microsoft.StreamAnalytics/streamingjobs/inputs/Stream.datasource.Microsoft-ServiceBus-EventHub.authenticationMode",
+                        "equals": "ConnectionString"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "field": "type",
+                "equals": "Microsoft.StreamAnalytics/streamingjobs"
+              },
+              {
+                "field": "Microsoft.StreamAnalytics/streamingjobs/jobStorageAccount.authenticationMode",
+                "equals": "ConnectionString"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "[parameters('effect')]"
+      }
+    },
+    "parameters": {
+      "effect": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Effect",
+          "description": "Enable or disable the execution of the policy"
+        },
+        "allowedValues": [
+          "Audit",
+          "Deny",
+          "Disabled"
+        ],
+        "defaultValue": "Deny"
+      }
+    }
+  }

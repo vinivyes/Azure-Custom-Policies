@@ -1,0 +1,359 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "anyOf": [
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Network/networkSecurityGroups"
+            },
+            {
+              "count": {
+                "field": "Microsoft.Network/networkSecurityGroups/securityRules[*]",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].access",
+                      "equals": "Allow"
+                    },
+                    {
+                      "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].direction",
+                      "equals": "Inbound"
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                          "in": [
+                            "*",
+                            "Internet",
+                            "0.0.0.0/0"
+                          ]
+                        },
+                        {
+                          "allOf":[
+                            {
+                              "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                              "notIn": [
+                                "*",
+                                "Internet",
+                                "",
+                                null
+                              ]
+                            },
+                            {
+                              "anyOf":[
+                                {
+                                  "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                                  "contains": "."
+                                },
+                                {
+                                  "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix",
+                                  "contains": ":"
+                                }
+                              ]
+                            },
+                            {
+                              "count":{
+                                "value":"[parameters('allowedIPsources')]",
+                                "name":"allowed",
+                                "where":{
+                                  "allOf":[
+                                    
+                                    {
+                                      "value": "[if(equals(length(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix'),'')),'.')),4),ipRangeContains(current('allowed'),string(field('Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefix'))),equals(-1,1))]",
+                                      "equals": true
+                                    }
+                                  ]
+                                }
+                              },
+                              "equals":0
+                            }
+                          ]
+                        },
+                        {
+                          "count":{
+                            "field":"Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefixes[*]",
+                            "where":{
+                              "count":{
+                                "value":"[parameters('allowedIPsources')]",
+                                "name":"allowed",
+                                "where":{
+                                  "anyOf":[
+                                    {
+                                      "value": "[ipRangeContains(current('allowed'),string(first(field('Microsoft.Network/networkSecurityGroups/securityRules[*].sourceAddressPrefixes[*]'))))]",
+                                      "equals": true
+                                    }
+                                  ]
+                                }
+                              },
+                              "equals":0
+                            }
+                          },
+                          "greater":0
+                        }
+                      ]
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange",
+                          "in": "[parameters('blockedPorts')]"
+                        },
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange",
+                          "equals": "*"
+                        },
+                        {
+                          "count": {
+                            "value": "[parameters('blockedPorts')]",
+                            "name": "blocked",
+                            "where": {
+                              "allOf": [
+                                {
+                                  "value": "[if(contains(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange'),'')),'-'),int(replace(replace(replace(first(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange'),'')),'-')),'[',''),'\"',''),']','')),-1)]",
+                                  "lessOrEquals": "[int(current('blocked'))]"
+                                },
+                                {
+                                  "value": "[if(contains(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange'),'')),'-'),int(replace(replace(replace(last(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRange'),'')),'-')),'[',''),'\"',''),']','')),-1)]",
+                                  "greaterOrEquals": "[int(current('blocked'))]"
+                                }
+                              ]
+                            }
+                          },
+                          "greater": 0
+                        },
+                        {
+                          "count": {
+                            "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRanges[*]",
+                            "where": {
+                              "anyOf": [
+                                {
+                                  "field": "Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRanges[*]",
+                                  "in": "[parameters('blockedPorts')]"
+                                },
+                                {
+                                  "count": {
+                                    "value": "[parameters('blockedPorts')]",
+                                    "name": "blockedRanges",
+                                    "where": {
+                                      "allOf": [
+                                        {
+                                          "value": "[if(contains(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRanges[*]'),'')),'-'),int(replace(replace(replace(first(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRanges[*]'),'')),'-')),'[',''),'\"',''),']','')),-1)]",
+                                          "lessOrEquals": "[int(current('blockedRanges'))]"
+                                        },
+                                        {
+                                          "value": "[if(contains(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRanges[*]'),'')),'-'),int(replace(replace(replace(last(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules[*].destinationPortRanges[*]'),'')),'-')),'[',''),'\"',''),']','')),-1)]",
+                                          "greaterOrEquals": "[int(current('blockedRanges'))]"
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "greater": 0
+                                }
+                              ]
+                            }
+                          },
+                          "greater": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "greater": 0
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Network/networkSecurityGroups/securityRules"
+            },
+            {
+              "field": "Microsoft.Network/networkSecurityGroups/securityRules/access",
+              "equals": "Allow"
+            },
+            {
+              "field": "Microsoft.Network/networkSecurityGroups/securityRules/direction",
+              "equals": "Inbound"
+            },
+            {
+              "anyOf": [
+                {
+                  "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix",
+                  "in": [
+                    "*",
+                    "Internet",
+                    "0.0.0.0/0"
+                  ]
+                },
+                {
+                  "allOf":[
+                    {
+                      "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix",
+                      "notIn": [
+                        "*",
+                        "Internet",
+                        "",
+                        null
+                      ]
+                    },
+                    {
+                      "anyOf":[
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix",
+                          "contains": "."
+                        },
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix",
+                          "contains": ":"
+                        }
+                      ]
+                    },
+                    {
+                      "count":{
+                        "value":"[parameters('allowedIPsources')]",
+                        "name":"allowed",
+                        "where":{
+                          "allOf":[
+                            
+                            {
+                              "value": "[if(equals(length(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix'),'')),'.')),4),ipRangeContains(current('allowed'),string(field('Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefix'))),equals(-1,1))]",
+                              "equals": true
+                            }
+                          ]
+                        }
+                      },
+                      "equals":0
+                    }
+                  ]
+                },
+                {
+                  "count":{
+                    "field":"Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefixes[*]",
+                    "where":{
+                      "count":{
+                        "value":"[parameters('allowedIPsources')]",
+                        "name":"allowed",
+                        "where":{
+                          "anyOf":[
+                            {
+                              "value": "[ipRangeContains(current('allowed'),string(first(field('Microsoft.Network/networkSecurityGroups/securityRules/sourceAddressPrefixes[*]'))))]",
+                              "equals": true
+                            }
+                          ]
+                        }
+                      },
+                      "equals":0
+                    }
+                  },
+                  "greater":0
+                }
+              ]
+            },
+            {
+              "anyOf": [
+                {
+                  "field": "Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRange",
+                  "in": "[parameters('blockedPorts')]"
+                },
+                {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRange",
+                      "equals": "*"
+                    },
+                    {
+                      "field": "Microsoft.Network/networkSecurityGroups/securityRules/direction",
+                      "equals": "Inbound"
+                    }
+                  ]
+                },
+                {
+                  "count": {
+                    "value": "[parameters('blockedPorts')]",
+                    "name": "blocked",
+                    "where": {
+                      "allOf": [
+                        {
+                          "value": "[if(contains(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRange'),'')),'-'),int(replace(replace(replace(first(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRange'),'')),'-')),'[',''),'\"',''),']','')),-1)]",
+                          "lessOrEquals": "[int(current('blocked'))]"
+                        },
+                        {
+                          "value": "[if(contains(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRange'),'')),'-'),int(replace(replace(replace(last(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRange'),'')),'-')),'[',''),'\"',''),']','')),-1)]",
+                          "greaterOrEquals": "[int(current('blocked'))]"
+                        }
+                      ]
+                    }
+                  },
+                  "greater": 0
+                },
+                {
+                  "count": {
+                    "field": "Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRanges[*]",
+                    "where": {
+                      "anyOf": [
+                        {
+                          "field": "Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRanges[*]",
+                          "in": "[parameters('blockedPorts')]"
+                        },
+                        {
+                          "count": {
+                            "value": "[parameters('blockedPorts')]",
+                            "name": "blockedRanges",
+                            "where": {
+                              "allOf": [
+                                {
+                                  "value": "[if(contains(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRanges[*]'),'')),'-'),int(replace(replace(replace(first(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRanges[*]'),'')),'-')),'[',''),'\"',''),']','')),-1)]",
+                                  "lessOrEquals": "[int(current('blockedRanges'))]"
+                                },
+                                {
+                                  "value": "[if(contains(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRanges[*]'),'')),'-'),int(replace(replace(replace(last(split(string(coalesce(field('Microsoft.Network/networkSecurityGroups/securityRules/destinationPortRanges[*]'),'')),'-')),'[',''),'\"',''),']','')),-1)]",
+                                  "greaterOrEquals": "[int(current('blockedRanges'))]"
+                                }
+                              ]
+                            }
+                          },
+                          "greater": 0
+                        }
+                      ]
+                    }
+                  },
+                  "greater": 0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "then": {
+      "effect": "deny"
+    }
+  },
+  "parameters": {
+    "blockedPorts": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Deny ports",
+        "description": null
+      },
+      "defaultValue": [
+        "22",
+        "3389"
+      ]
+    },
+    "allowedIPsources": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Allowed IP Sources",
+        "description": null
+      },
+      "defaultValue":[]
+    }
+  }
+}
