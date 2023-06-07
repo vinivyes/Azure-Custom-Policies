@@ -1,0 +1,107 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "field": "type",
+      "equals": "microsoft.resources/subscriptions"
+    },
+    "then": {
+      "effect": "deployIfNotExists",
+      "details": {
+        "type": "Microsoft.Insights/diagnosticSettings",
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.Insights/diagnosticSettings/workspaceId",
+              "equals": "[parameters('workspaceId')]"
+            },
+            {
+              "field": "Microsoft.Insights/diagnosticSettings/logs.enabled",
+              "equals": true
+            }
+          ]
+        },
+        "deploymentScope":"subscription",
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "diagnosticSettingsName":{
+                  "type":"string"
+                }
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Insights/diagnosticSettings",
+                  "name": "[parameters('diagnosticSettingsName')]",
+                  "location": "global",
+                  "properties": {
+                    "workspaceId": "/subscriptions/6e6feb18-4fff-4ecf-8ca8-0dc0c7506558/resourceGroups/DefaultResourceGroup-eastus2/providers/Microsoft.OperationalInsights/workspaces/DefaultWorkspace-eastus2",
+                    "logs": [
+                      {
+                        "category": "Administrative",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Security",
+                        "enabled": true
+                      },
+                      {
+                        "category": "ServiceHealth",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Alert",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Recommendation",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Policy",
+                        "enabled": true
+                      },
+                      {
+                        "category": "Autoscale",
+                        "enabled": true
+                      },
+                      {
+                        "category": "ResourceHealth",
+                        "enabled": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "parameters": {
+              "diagnosticSettingsName":{
+                "value":"[parameters('diagnosticSettingsName')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "workspaceId": {
+      "type": "string",
+      "metadata": {
+        "displayName": "ID of Workspace",
+        "description": "Fully qualified ID of the Workspace where logs should be sent to"
+      }
+    },
+    "diagnosticSettingsName": {
+      "type": "string",
+      "metadata": {
+        "displayName": "Name of the Diagnostic Settings"
+      },
+      "defaultValue":"setByPolicy"
+    }
+  }
+}
