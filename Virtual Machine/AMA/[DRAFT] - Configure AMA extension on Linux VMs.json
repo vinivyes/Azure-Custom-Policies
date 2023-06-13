@@ -1,117 +1,385 @@
 {
-  "mode": "Indexed",
-  "policyRule": {
-    "if": {
-      "allOf": [
-        {
-          "field": "type",
-          "equals": "Microsoft.Compute/virtualMachines"
+  "requests": [
+    {
+      "httpMethod": "PUT",
+      "content": {
+        "id": "/subscriptions/1bea3f8d-8ef0-48f4-871c-d3dc6cd36c7b/resourceGroups/singularity-dev/providers/Microsoft.Web/sites/pingtico",
+        "name": "pingtico",
+        "type": "Microsoft.Web/sites",
+        "kind": "app,linux",
+        "location": "East US",
+        "tags": {
+          "ApplicationName": "",
+          "Cost_Center": "",
+          "DataClass": "",
+          "DR": "",
+          "Environment": "",
+          "Owner": "",
+          "ServiceClass": "",
+          "AutomationSchedule": "",
+          "Project-Code": "",
+          "Impact-Rating": ""
         },
-        {
-          "anyOf": [
-            {
-              "field": "Microsoft.Compute/virtualMachines/osProfile.linuxConfiguration",
-              "exists": true
-            },
-            {
-              "field": "Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType",
-              "like": "Linux*"
-            }
-          ]
-        }
-      ]
-    },
-    "then": {
-      "effect": "[parameters('effect')]",
-      "details": {
-        "type": "Microsoft.Compute/virtualMachines/extensions",
-        "roleDefinitionIds": [
-          "/providers/microsoft.authorization/roleDefinitions/9980e02c-c2be-4d73-94e8-173b1dc7cf3c"
-        ],
-        "existenceCondition": {
-          "allOf": [
-            {
-              "field": "Microsoft.Compute/virtualMachines/extensions/type",
-              "equals": "AzureMonitorLinuxAgent"
-            },
-            {
-              "field": "Microsoft.Compute/virtualMachines/extensions/publisher",
-              "equals": "Microsoft.Azure.Monitor"
-            },
-            {
-              "field": "Microsoft.Compute/virtualMachines/extensions/enableAutomaticUpgrade",
-              "equals": "true"
-            },
-            {
-              "field": "Microsoft.Compute/virtualMachines/extensions/provisioningState",
-              "in": [
-                "Succeeded",
-                "Provisioning succeeded"
-              ]
-            }
-          ]
-        },
-        "deployment": {
-          "properties": {
-            "mode": "incremental",
-            "template": {
-              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-              "contentVersion": "1.0.0.0",
-              "parameters": {
-                "vmName": {
-                  "type": "string"
-                },
-                "location": {
-                  "type": "string"
-                }
+        "properties": {
+          "name": "pingtico",
+          "state": "Running",
+          "hostNames": [
+            "pingtico.com",
+            "pingtico.azurewebsites.net"
+          ],
+          "webSpace": "Singularity-Dev-EastUSwebspace-Linux",
+          "selfLink": "https://waws-prod-blu-427.api.azurewebsites.windows.net:454/subscriptions/1bea3f8d-8ef0-48f4-871c-d3dc6cd36c7b/webspaces/Singularity-Dev-EastUSwebspace-Linux/sites/pingtico",
+          "repositorySiteName": "pingtico",
+          "owner": null,
+          "usageState": "Normal",
+          "enabled": true,
+          "adminEnabled": true,
+          "enabledHostNames": [
+            "pingtico.com",
+            "pingtico.azurewebsites.net",
+            "pingtico.scm.azurewebsites.net"
+          ],
+          "siteProperties": {
+            "metadata": null,
+            "properties": [
+              {
+                "name": "LinuxFxVersion",
+                "value": "NODE|18-lts"
               },
-              "variables": {
-                "extensionName": "AzureMonitorLinuxAgent",
-                "extensionPublisher": "Microsoft.Azure.Monitor",
-                "extensionType": "AzureMonitorLinuxAgent",
-                "extensionTypeHandlerVersion": "1.12"
-              },
-              "resources": [
-                {
-                  "name": "[concat(parameters('vmName'), '/', variables('extensionName'))]",
-                  "type": "Microsoft.Compute/virtualMachines/extensions",
-                  "location": "[parameters('location')]",
-                  "apiVersion": "2019-07-01",
-                  "properties": {
-                    "publisher": "[variables('extensionPublisher')]",
-                    "type": "[variables('extensionType')]",
-                    "typeHandlerVersion": "[variables('extensionTypeHandlerVersion')]",
-                    "autoUpgradeMinorVersion": true,
-                    "enableAutomaticUpgrade": true
-                  }
-                }
-              ]
-            },
-            "parameters": {
-              "vmName": {
-                "value": "[field('name')]"
-              },
-              "location": {
-                "value": "[field('location')]"
+              {
+                "name": "WindowsFxVersion",
+                "value": null
               }
+            ],
+            "appSettings": null
+          },
+          "availabilityState": "Normal",
+          "sslCertificates": null,
+          "csrs": [],
+          "cers": null,
+          "siteMode": null,
+          "hostNameSslStates": [
+            {
+              "name": "pingtico.azurewebsites.net",
+              "sslState": "Disabled",
+              "ipBasedSslResult": null,
+              "virtualIP": null,
+              "thumbprint": null,
+              "certificateResourceId": null,
+              "toUpdate": null,
+              "toUpdateIpBasedSsl": null,
+              "ipBasedSslState": "NotConfigured",
+              "hostType": "Standard"
+            },
+            {
+              "name": "pingtico.com",
+              "sslState": "SniEnabled",
+              "ipBasedSslResult": null,
+              "virtualIP": null,
+              "thumbprint": "8088EC29E082375CD3A6DDC957536799E8EF5FE7",
+              "certificateResourceId": "/subscriptions/1bea3f8d-8ef0-48f4-871c-d3dc6cd36c7b/resourceGroups/Singularity-Dev/providers/Microsoft.Web/certificates/pingtico.com-pingtico-undefined",
+              "toUpdate": null,
+              "toUpdateIpBasedSsl": null,
+              "ipBasedSslState": "NotConfigured",
+              "hostType": "Standard"
+            },
+            {
+              "name": "pingtico.scm.azurewebsites.net",
+              "sslState": "Disabled",
+              "ipBasedSslResult": null,
+              "virtualIP": null,
+              "thumbprint": null,
+              "certificateResourceId": null,
+              "toUpdate": null,
+              "toUpdateIpBasedSsl": null,
+              "ipBasedSslState": "NotConfigured",
+              "hostType": "Repository"
             }
-          }
+          ],
+          "computeMode": null,
+          "serverFarm": null,
+          "serverFarmId": "/subscriptions/1bea3f8d-8ef0-48f4-871c-d3dc6cd36c7b/resourceGroups/Singularity-Dev/providers/Microsoft.Web/serverfarms/pingtico-plan",
+          "reserved": true,
+          "isXenon": false,
+          "hyperV": false,
+          "lastModifiedTimeUtc": "2023-06-02T05:01:50.57",
+          "storageRecoveryDefaultState": "Running",
+          "contentAvailabilityState": "Normal",
+          "runtimeAvailabilityState": "Normal",
+          "dnsConfiguration": {},
+          "vnetRouteAllEnabled": false,
+          "containerAllocationSubnet": null,
+          "useContainerLocalhostBindings": null,
+          "vnetImagePullEnabled": false,
+          "vnetContentShareEnabled": false,
+          "siteConfig": {
+            "numberOfWorkers": 1,
+            "defaultDocuments": [
+              "Default.htm",
+              "Default.html",
+              "Default.asp",
+              "index.htm",
+              "index.html",
+              "iisstart.htm",
+              "default.aspx",
+              "index.php",
+              "hostingstart.html"
+            ],
+            "netFrameworkVersion": "v4.0",
+            "phpVersion": null,
+            "pythonVersion": "",
+            "nodeVersion": null,
+            "powerShellVersion": "",
+            "linuxFxVersion": "NODE|18-lts",
+            "windowsFxVersion": null,
+            "windowsConfiguredStacks": [],
+            "requestTracingEnabled": false,
+            "remoteDebuggingEnabled": false,
+            "remoteDebuggingVersion": "VS2019",
+            "httpLoggingEnabled": false,
+            "azureMonitorLogCategories": [
+              ""
+            ],
+            "acrUseManagedIdentityCreds": false,
+            "acrUserManagedIdentityID": null,
+            "logsDirectorySizeLimit": 35,
+            "detailedErrorLoggingEnabled": false,
+            "publishingUsername": "$pingtico",
+            "publishingPassword": null,
+            "appSettings": [],
+            "metadata": [
+              {
+                "name": "RepoUrl",
+                "value": "https://github.com/vinivyes/singularity-frontend"
+              },
+              {
+                "name": "subscription",
+                "value": "1bea3f8d-8ef0-48f4-871c-d3dc6cd36c7b"
+              },
+              {
+                "name": "OAuthToken",
+                "value": "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"
+              },
+              {
+                "name": "ScmUri",
+                "value": "https://github.com/vinivyes/singularity-frontend"
+              },
+              {
+                "name": "CloneUri",
+                "value": "https://github.com/vinivyes/singularity-frontend"
+              },
+              {
+                "name": "branch",
+                "value": "TestPullRequest-InitialSetup"
+              },
+              {
+                "name": "ScmGitHubActionGenerateWorkflowFile",
+                "value": "True"
+              },
+              {
+                "name": "ScmGitHubActionIsLinux",
+                "value": "True"
+              },
+              {
+                "name": "ScmGitHubActionWorkflowSettings",
+                "value": "{\"appType\":\"webapp\",\"publishType\":\"code\",\"os\":\"linux\",\"variables\":{\"runtimeVersion\":\"18.x\"},\"runtimeStack\":\"node\",\"WorkflowApiVersion\":\"2020-12-01\",\"UseCanaryFusionServer\":false,\"authType\":\"publishprofile\"}"
+              },
+              {
+                "name": "ScmGitHubActionSecretName",
+                "value": "AZUREAPPSERVICE_PUBLISHPROFILE_3F413EA1D9954FF9A571A0A2DC988126"
+              },
+              {
+                "name": "ScmGitHubActionWorkflowFilePath",
+                "value": ".github/workflows/testpullrequest-initialsetup_pingtico.yml"
+              },
+              {
+                "name": "CURRENT_STACK",
+                "value": "dotnet"
+              }
+            ],
+            "connectionStrings": [],
+            "machineKey": null,
+            "handlerMappings": null,
+            "documentRoot": null,
+            "scmType": "GitHubAction",
+            "use32BitWorkerProcess": true,
+            "webSocketsEnabled": false,
+            "alwaysOn": true,
+            "javaVersion": "",
+            "javaContainer": "",
+            "javaContainerVersion": "",
+            "appCommandLine": "node_modules/next/dist/bin/next start -p 8080",
+            "managedPipelineMode": "Integrated",
+            "virtualApplications": [
+              {
+                "virtualPath": "/",
+                "physicalPath": "site\\wwwroot",
+                "preloadEnabled": true,
+                "virtualDirectories": [],
+                "virtualDirectory": false
+              }
+            ],
+            "winAuthAdminState": 0,
+            "winAuthTenantState": 0,
+            "customAppPoolIdentityAdminState": false,
+            "customAppPoolIdentityTenantState": false,
+            "runtimeADUser": null,
+            "runtimeADUserPassword": null,
+            "loadBalancing": "LeastRequests",
+            "routingRules": [],
+            "experiments": {
+              "rampUpRules": []
+            },
+            "limits": null,
+            "autoHealEnabled": false,
+            "autoHealRules": null,
+            "tracingOptions": null,
+            "vnetName": "",
+            "vnetRouteAllEnabled": false,
+            "vnetPrivatePortsCount": 0,
+            "publicNetworkAccess": "Enabled",
+            "siteAuthEnabled": false,
+            "siteAuthSettings": {
+              "enabled": null,
+              "unauthenticatedClientAction": null,
+              "tokenStoreEnabled": null,
+              "allowedExternalRedirectUrls": null,
+              "defaultProvider": null,
+              "clientId": null,
+              "clientSecret": null,
+              "clientSecretSettingName": null,
+              "clientSecretCertificateThumbprint": null,
+              "issuer": null,
+              "allowedAudiences": null,
+              "additionalLoginParams": null,
+              "isAadAutoProvisioned": false,
+              "aadClaimsAuthorization": null,
+              "googleClientId": null,
+              "googleClientSecret": null,
+              "googleClientSecretSettingName": null,
+              "googleOAuthScopes": null,
+              "facebookAppId": null,
+              "facebookAppSecret": null,
+              "facebookAppSecretSettingName": null,
+              "facebookOAuthScopes": null,
+              "gitHubClientId": null,
+              "gitHubClientSecret": null,
+              "gitHubClientSecretSettingName": null,
+              "gitHubOAuthScopes": null,
+              "twitterConsumerKey": null,
+              "twitterConsumerSecret": null,
+              "twitterConsumerSecretSettingName": null,
+              "microsoftAccountClientId": null,
+              "microsoftAccountClientSecret": null,
+              "microsoftAccountClientSecretSettingName": null,
+              "microsoftAccountOAuthScopes": null,
+              "configVersion": null
+            },
+            "cors": null,
+            "push": null,
+            "apiDefinition": null,
+            "apiManagementConfig": null,
+            "autoSwapSlotName": null,
+            "localMySqlEnabled": false,
+            "managedServiceIdentityId": null,
+            "xManagedServiceIdentityId": null,
+            "keyVaultReferenceIdentity": null,
+            "ipSecurityRestrictionsDefaultAction": null,
+            "scmIpSecurityRestrictionsDefaultAction": null,
+            "scmIpSecurityRestrictionsUseMain": false,
+            "http20Enabled": false,
+            "minTlsVersion": "1.0",
+            "minTlsCipherSuite": null,
+            "supportedTlsCipherSuites": null,
+            "scmMinTlsVersion": "1.2",
+            "ftpsState": "FtpsOnly",
+            "reservedInstanceCount": 0,
+            "preWarmedInstanceCount": null,
+            "functionAppScaleLimit": null,
+            "elasticWebAppScaleLimit": 0,
+            "healthCheckPath": null,
+            "fileChangeAuditEnabled": false,
+            "functionsRuntimeScaleMonitoringEnabled": false,
+            "websiteTimeZone": null,
+            "minimumElasticInstanceCount": 0,
+            "http20ProxyFlag": 0,
+            "sitePort": null,
+            "antivirusScanEnabled": false,
+            "storageType": "StorageVolume"
+          },
+          "deploymentId": "pingtico__0b59",
+          "slotName": null,
+          "trafficManagerHostNames": null,
+          "sku": "PremiumV3",
+          "scmSiteAlsoStopped": false,
+          "targetSwapSlot": null,
+          "hostingEnvironment": null,
+          "hostingEnvironmentProfile": null,
+          "clientAffinityEnabled": false,
+          "clientCertEnabled": false,
+          "clientCertMode": "Required",
+          "clientCertExclusionPaths": null,
+          "hostNamesDisabled": false,
+          "vnetBackupRestoreEnabled": false,
+          "domainVerificationIdentifiers": null,
+          "customDomainVerificationId": "3074C4985D9CE8E078F1E42EA65FAEDCE0E4FE89335E37590E0F556DC5BEDB78",
+          "kind": "app,linux",
+          "managedEnvironmentId": null,
+          "inboundIpAddress": "20.119.0.29",
+          "possibleInboundIpAddresses": "20.119.0.29",
+          "ftpUsername": "pingtico\\$pingtico",
+          "ftpsHostName": "ftps://waws-prod-blu-427.ftp.azurewebsites.windows.net/site/wwwroot",
+          "outboundIpAddresses": "20.246.137.45,20.246.137.75,20.246.137.80,20.246.137.136,20.246.137.139,20.246.137.154,20.119.0.29",
+          "possibleOutboundIpAddresses": "20.237.31.14,20.237.31.70,20.237.31.151,20.237.31.157,20.237.31.179,20.237.31.189,20.237.31.199,20.246.136.24,20.246.136.30,20.246.136.97,20.246.136.139,20.246.137.37,20.246.137.45,20.246.137.75,20.246.137.80,20.246.137.136,20.246.137.139,20.246.137.154,20.246.137.218,20.237.24.68,20.237.25.26,20.237.26.79,20.246.138.59,20.246.138.104,20.119.0.29",
+          "containerSize": 0,
+          "dailyMemoryTimeQuota": 0,
+          "suspendedTill": null,
+          "siteDisabledReason": 0,
+          "functionExecutionUnitsCache": null,
+          "maxNumberOfWorkers": null,
+          "homeStamp": "waws-prod-blu-427",
+          "cloningInfo": null,
+          "hostingEnvironmentId": null,
+          "tags": {
+            "ApplicationName": "",
+            "Cost_Center": "",
+            "DataClass": "",
+            "DR": "",
+            "Environment": "",
+            "Owner": "",
+            "ServiceClass": "",
+            "AutomationSchedule": "",
+            "Project-Code": "",
+            "Impact-Rating": ""
+          },
+          "resourceGroup": "Singularity-Dev",
+          "defaultHostName": "pingtico.azurewebsites.net",
+          "slotSwapStatus": {
+            "timestampUtc": "2023-06-02T05:02:42.693Z",
+            "sourceSlotName": "staging",
+            "destinationSlotName": "Production"
+          },
+          "httpsOnly": true,
+          "redundancyMode": "None",
+          "inProgressOperationId": null,
+          "geoDistributions": null,
+          "privateEndpointConnections": [],
+          "publicNetworkAccess": "Enabled",
+          "buildVersion": null,
+          "targetBuildVersion": null,
+          "migrationState": null,
+          "eligibleLogCategories": "AppServiceAppLogs,AppServiceAuditLogs,AppServiceConsoleLogs,AppServiceHTTPLogs,AppServiceIPSecAuditLogs,AppServicePlatformLogs,ScanLogs,AppServiceFileAuditLogs,AppServiceAntivirusScanAuditLogs",
+          "inFlightFeatures": [],
+          "storageAccountRequired": false,
+          "keyVaultReferenceIdentity": "SystemAssigned",
+          "defaultHostNameScope": "Global",
+          "privateLinkIdentifiers": null
         }
-      }
-    }
-  },
-  "parameters": {
-    "effect": {
-      "type": "String",
-      "metadata": {
-        "displayName": "Effect",
-        "description": "Enable or disable the execution of the policy."
       },
-      "allowedValues": [
-        "DeployIfNotExists",
-        "Disabled"
-      ],
-      "defaultValue": "DeployIfNotExists"
+      "requestHeaderDetails": {
+        "commandName": "updateSite"
+      },
+      "url": "/subscriptions/1bea3f8d-8ef0-48f4-871c-d3dc6cd36c7b/resourceGroups/singularity-dev/providers/Microsoft.Web/sites/pingtico?api-version=2018-11-01"
     }
-  }
+  ]
 }
