@@ -36,7 +36,7 @@
                                                 "value": "[field('id')]"
                                           },
                                           "privateEndpointSubnetId": {
-                                                "value": "[parameters('privateEndpointSubnetId')]"
+                                                "value": "[union(createObject('disabled',''),parameters('privateEndpointSubnetId'))[field('location')]]"
                                           }
                                     },
                                     "template": {
@@ -134,11 +134,14 @@
       },
       "parameters": {
             "privateEndpointSubnetId": {
-                  "type": "String",
+                  "type": "Object",
                   "metadata": {
                         "displayName": "privateEndpointSubnetId",
-                        "description": "A subnet in the location",
+                        "description": "Key-Value pair for Region:SubnetId",
                         "strongType": "Microsoft.Network/virtualNetworks/subnets"
+                  },
+                  "defaultValue":{
+                        "eastus":"/subscriptions/6e6feb18-4fff-4ecf-8ca8-0dc0c7506558/resourcegroups/sr7655/providers/microsoft.network/virtualnetworks/sr7655vnet/subnets/default"
                   }
             },
             "effect": {
